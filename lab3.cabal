@@ -1,0 +1,70 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 66abdc23299011b7d9e624645a7c5927168177bb31af47a91e02b7c3180e0700
+
+name:           lab3
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/Github username here/lab3#readme>
+homepage:       https://github.com/Github username here/lab3#readme
+bug-reports:    https://github.com/Github username here/lab3/issues
+author:         Author name here
+maintainer:     Author email here
+copyright:      2019 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/Github username here/lab3
+
+library
+  exposed-modules:
+      Lib
+      Tablefy
+  other-modules:
+      Paths_lab3
+  hs-source-dirs:
+      src
+  build-depends:
+        base >=4.7 && <5
+      , split >=0.2.3.4
+      , utf8-string
+      , directory
+  default-language: Haskell2010
+
+executable lab3-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_lab3
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , lab3
+    , split >=0.2.3.4
+    , utf8-string
+    , directory
+  default-language: Haskell2010
+
+test-suite lab3-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_lab3
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , lab3
+    , directory
+  default-language: Haskell2010
