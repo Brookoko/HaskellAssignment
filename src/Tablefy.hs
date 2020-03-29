@@ -1,11 +1,12 @@
 module Tablefy
-    ( tablefy,
-      tablefy'
-    ) where
+  (
+    tablefy,
+    tablefy'
+  ) where
 
 import Prelude hiding (Left, Right)
 import Data.List (intercalate, intersperse, transpose)
-import Lib;
+import Table;
 
 tablefy' (Table columns) = tablefy (fst col) (transpose $ unpack $ snd col)
   where

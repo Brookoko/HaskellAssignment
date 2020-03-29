@@ -1,7 +1,8 @@
 module Main where
 
-import Lib;
+import Console;
 import Tablefy;
+import Parser;
 
 main :: IO ()
 main = prompt showParse
