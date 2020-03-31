@@ -15,8 +15,8 @@ data Parser = Parser {
 }
 
 parsers = [ Parser parseCsv "csv",  Parser parseCsv "tsv", Parser parseCsv "json" ]
-
-parseCsv content = Table $ map fromArray (transpose $ splitByComma content)
+parseCsv :: String -> Table
+parseCsv content = fromList $ splitByComma content
  where splitByComma content = map (correctQuotes . splitOn ",") (lines content)
 
 correctQuotes list
