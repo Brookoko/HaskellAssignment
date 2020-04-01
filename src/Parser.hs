@@ -8,6 +8,7 @@ import Table
 import Data.List
 import Data.List.Split
 import System.Directory
+import Data.Maybe
 
 data Parser = Parser {
   parse :: String -> Table,
@@ -15,14 +16,29 @@ data Parser = Parser {
 }
 
 parsers = [ Parser parseCsv "csv",  Parser parseCsv "tsv", Parser parseCsv "json" ]
-parseCsv :: String -> Table
-parseCsv content = fromList $ splitByComma content
- where splitByComma content = map (correctQuotes . splitOn ",") (lines content)
 
-correctQuotes list
-  | any (isPrefixOf "\"") list = correctQuotes $ concatIntoOne $ break (isPrefixOf "\"") list
-  | otherwise = list;
-concatIntoOne (first, second) = init first ++ [tail (last first) ++ init (head second)] ++ tail second
+parseCsv content = fromList $ splitByComma content
+  where splitByComma content = map (correctQuotes . splitOn ",") (lines content)
+
+correctQuotes = map correct . joinStringWithCommas
+  where
+    correct s
+      | ("\"" `isPrefixOf` s) && ("\"" `isSuffixOf` s) = correct $ tail $ init s
+      | "\"\"" `isInfixOf` s = replace "\"\"" "\"" s
+      | otherwise = s
+
+joinStringWithCommas (x:xs)
+  | ("\"" `isPrefixOf` x) && not ("\"" `isSuffixOf` x) = correct x xs : joinStringWithCommas (drop (index x xs + 1) xs)
+  | otherwise = x : joinStringWithCommas xs
+  where
+    correct x xs = intercalate "," (x : take (index x xs + 1) xs)
+    index x xs = fromMaybe (-1) (findIndex ("\"" `isSuffixOf`) xs)
+joinStringWithCommas _ = []
+
+replace x y s
+  | x `isPrefixOf` s = y ++ replace x y (drop (length x) s)
+  | null s = ""
+  | otherwise = head s : replace x y (tail s)
 
 parseFile file = do
   isExist <- doesFileExist file

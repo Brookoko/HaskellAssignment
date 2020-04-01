@@ -13,7 +13,7 @@ instance Show Table where
   show (Table h table) = unlines $ intersperse sep (header:rows)
     where
       t = map (map unpack) table
-      widths = map (maximum . map length) (transpose (h:t))
+      widths = map (min 60 . maximum . map length) (transpose (h:t))
       sep = intercalate "+" $ map (flip replicate '-' . (+2)) widths
       header = mkRow Center h
       rows = map (mkRow Left) t
