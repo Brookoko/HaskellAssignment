@@ -34,17 +34,22 @@ select = do
   cols <- cols
   Select cols <$> statement'
 
-cols = sepBy1 col comma
-col = do
-  col <- name
-  colWithName col <|> simpleCol col
+cols = sepBy1 (distCol <|> col False) comma
 
-colWithName col = do
+distCol = do
+  reserved "distinct"
+  col True
+
+col dist = do
+  col <- name
+  colWithName col dist <|> simpleCol col dist
+
+colWithName col dist = do
   try $ reserved "as"
   n <- name
-  return $ Col col n False
+  return $ Col col n dist
 
-simpleCol col = return $ Col col col False
+simpleCol col dist = return $ Col col col dist
 
 from = do
   reserved "from"

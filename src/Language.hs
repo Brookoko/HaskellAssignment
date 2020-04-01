@@ -22,7 +22,8 @@ languageDef = emptyDef {
     "load",
     "select",
     "from",
-    "as"
+    "as",
+    "distinct"
   ],
   Token.caseSensitive = False
 }
