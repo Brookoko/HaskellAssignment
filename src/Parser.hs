@@ -11,17 +11,15 @@ import System.Directory
 import Data.Maybe
 
 data Parser = Parser {
-  parse :: String -> Table,
+  parse :: String -> [[String]],
   extension :: String
 }
 
 parsers = [ Parser parseCsv "csv",  Parser parseTsv "tsv", Parser parseCsv "json" ]
 
-parseTsv = fromList . splitByTab
-  where splitByTab content = map (splitOn "\t") (lines content)
+parseTsv content = map (splitOn "\t") (lines content)
 
-parseCsv content = fromList $ splitByComma content
-  where splitByComma content = map (correctQuotes . splitOn ",") (lines content)
+parseCsv content = map (correctQuotes . splitOn ",") (lines content)
 
 correctQuotes = map correct . joinStringWithCommas
   where
@@ -49,7 +47,7 @@ parseFile file = do
     then do
       content <- readFile file
       return $ parse (parserByFileExtension file) content
-    else error $ "No file with name" ++ file
+    else error $ "No file with name: " ++ file
 
 parserByFileExtension file = head $ filter isSuitable parsers
   where isSuitable = canWorkWith (fileExtension file)

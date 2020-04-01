@@ -4,6 +4,11 @@ import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token as Token
 
+data Statement = Seq [Statement]
+  | Load String
+  | Skip
+  deriving (Show)
+
 languageDef = emptyDef {
   Token.commentLine = "//",
   Token.identStart = letter <|> char '/' <|> char '-' <|> char '_' <|> char '.',

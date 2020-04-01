@@ -3,11 +3,6 @@ module LanguageFunction where
 import Language
 import Text.ParserCombinators.Parsec
 
-data Statement = Seq [Statement]
-  | Load String String
-  | Skip
-  deriving (Show)
-
 statement' :: Parser Statement
 statement' =
   load <|>
@@ -15,9 +10,7 @@ statement' =
 
 load = do
   reserved "load"
-  file <- identifier
-  Load file <$> identifier
+  Load <$> identifier
 
-skip :: Parser Statement
 skip = return Skip
 

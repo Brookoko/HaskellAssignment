@@ -1,16 +1,21 @@
 module Table
   (
-    Table,
+    Table ( .. ),
     fromList
   ) where
 
 import Data.List;
 import Prelude hiding (Left, Right)
+import Data.Maybe
 
-data Table = Table [String] [[Maybe String]]
+data Table = Empty | Table {
+  header :: [String],
+  rows :: [[Maybe String]]
+}
 
 instance Show Table where
-  show (Table h table) = unlines $ intersperse sep (header:rows)
+  show Empty = ""
+  show (Table h table) = unlines (intersperse sep (header : rows))
     where
       t = map (map unpack) table
       widths = map (min 60 . maximum . map length) (transpose (h:t))
@@ -19,17 +24,16 @@ instance Show Table where
       rows = map (mkRow Left) t
       mkRow a = intercalate "|" . zipWith (mkCell a) widths
       mkCell a n xs = " " ++ pad a n ' ' xs ++ " "
-      unpack (Just x) = x
-      unpack _  = "null"
+      unpack = fromMaybe "null"
 
-fromList list = uncurry Table (head list, pack $ tail list)
+fromList list = Table (head list) (pack (tail list))
 pack = map (map packString)
 packString s = if null s then Nothing else Just s
 
 data Alignment = Left | Right | Center deriving Eq
 
 pad a n x xs
-    | n < 1          = error "Tablefy.pad: Length must not be smaller than one"
+    | n < 1          = error "pad: Length must not be smaller than one"
     | n <= length xs = take n xs
     | a == Left      = xs ++ fill
     | a == Right     = fill ++ xs

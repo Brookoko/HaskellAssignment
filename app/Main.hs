@@ -1,11 +1,13 @@
 module Main where
 
 import Console;
-import Parser;
+import LanguageParser;
+import Interpreter;
 
 main :: IO ()
 main = prompt showParse
 
 showParse input = do
-  table <- parseFile input
+  let statement = parseString input
+  table <- execute statement
   print table
