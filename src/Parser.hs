@@ -15,7 +15,10 @@ data Parser = Parser {
   extension :: String
 }
 
-parsers = [ Parser parseCsv "csv",  Parser parseCsv "tsv", Parser parseCsv "json" ]
+parsers = [ Parser parseCsv "csv",  Parser parseTsv "tsv", Parser parseCsv "json" ]
+
+parseTsv = fromList . splitByTab
+  where splitByTab content = map (splitOn "\t") (lines content)
 
 parseCsv content = fromList $ splitByComma content
   where splitByComma content = map (correctQuotes . splitOn ",") (lines content)
