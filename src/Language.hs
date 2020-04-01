@@ -7,15 +7,15 @@ import Table;
 
 data Statement = Seq [Statement]
   | Load String
-  | Select [Col] String Statement
-  | SelectString String Statement
+  | Select [Col] Statement
+  | From String Statement
   | Skip String
   deriving (Show)
 
-data Col = Col String String deriving (Show)
+data Col = Col String String Bool deriving (Show)
 
 languageDef = emptyDef {
-  Token.commentLine = "//",
+  Token.commentLine = "--",
   Token.identStart = letter <|> oneOf  "_-*",
   Token.identLetter = alphaNum <|> oneOf  "_-*",
   Token.reservedNames = [

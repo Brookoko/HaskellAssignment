@@ -18,6 +18,7 @@ statement' :: Parser Statement
 statement' =
   load <|>
   select <|>
+  from <|>
   skip <|>
   end
 
@@ -31,23 +32,24 @@ load = do
 select = do
   reserved "select"
   cols <- cols
-  reserved "from"
-  table <- name
-  Select cols table <$> statement
+  Select cols <$> statement'
 
 cols = sepBy1 col comma
-col = colWithName <|> simpleCol
-
-colWithName = do
+col = do
   col <- name
-  if col == "*" then return $ Col "*" "*"
-  else do
-    reserved "as"
-    Col col <$> name
+  colWithName col <|> simpleCol col
 
-simpleCol = do
-  col <- name
-  return $ Col col col
+colWithName col = do
+  try $ reserved "as"
+  n <- name
+  return $ Col col n False
+
+simpleCol col = return $ Col col col False
+
+from = do
+  reserved "from"
+  n <- name
+  From n <$> statement'
 
 skip = Skip <$> name
 end = do

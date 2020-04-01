@@ -6,22 +6,31 @@ module Interpreter
 import Language
 import Table
 import Parser
-import Data.List;
+import Data.List
+import Control.Monad
 
 loadTable name = do
   content <- parseFile name
   return $ fromList content
 
-columns = map (\(Col col _) -> col)
-names = map (\(Col _ name) -> name)
+columns = map (\(Col col _ _) -> col)
+names = map (\(Col _ name _) -> name)
+
+tableFromCols cols (From name _) = do
+  table <- loadTable name
+  return $ select (columns cols) (names cols) table
+tableFromCols cols _  = return $ fromList (names cols : [columns cols])
 
 execute (Load file) = do
   table <- loadTable file
   return $ show table
 
-execute (Select cols name stmt) = do
-  t <- loadTable name
-  let table = select (columns cols) (names cols) t
+execute (Select cols stmt) = do
+  table <- tableFromCols cols stmt
+  let s = statement stmt
   return $ show table
+    where
+      statement (From _ s) = s
+      statement _ = stmt
 
 execute (Skip stm) = return $ "Cannot procces: " ++ stm
