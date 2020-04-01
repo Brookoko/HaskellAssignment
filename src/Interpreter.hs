@@ -8,17 +8,20 @@ import Table
 import Parser
 import Data.List;
 
-createTable name = do
+loadTable name = do
   content <- parseFile name
   return $ fromList content
 
+columns = map (\(Col col _) -> col)
+names = map (\(Col _ name) -> name)
+
 execute (Load file) = do
-  table <- createTable file
+  table <- loadTable file
   return $ show table
 
 execute (Select cols name stmt) = do
-  t <- createTable name
-  let table = select cols t
+  t <- loadTable name
+  let table = select (columns cols) (names cols) t
   return $ show table
 
 execute (Skip stm) = return $ "Cannot procces: " ++ stm

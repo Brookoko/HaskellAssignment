@@ -15,6 +15,8 @@ data Table = Table {
   rows :: [[Maybe String]]
 }
 
+data Alignment = Left | Right | Center deriving Eq
+
 instance Show Table where
   show (Table h table) = unlines (intersperse sep (header : rows))
     where
@@ -31,25 +33,25 @@ fromList list = Table (head list) (pack (tail list))
 pack = map (map packString)
 packString s = if null s then Nothing else Just s
 
-empty = Table [] []
-
-select cols table = sel cols empty
-  where
-    sel [] t = t
-    sel (x:xs) t@(Table h rows)
-      | x == "*" = sel xs (sel (header table) t)
-      | otherwise = sel xs (Table (h ++ [h']) (merge rows rows'))
-      where (h', rows') = column x table
-
-column name (Table header rows) = (header !! i, map (\x -> [x !! i]) rows)
-  where
-    i = fromMaybe err  (elemIndex name header)
-    err = error ("No column with name: " ++ name)
-
+fromTables (Table h1 rows1) (Table h2 rows2) = Table (h1 ++ h2) (merge rows1 rows2)
 merge (x:xs) (y:ys) = (x ++ y) : merge xs ys
 merge [] ys = ys
 
-data Alignment = Left | Right | Center deriving Eq
+empty = Table [] []
+
+select cols names table = sel cols names empty
+  where
+    sel [] _ t = t
+    sel (x:xs) (y:ys) t
+      | x == "*" = sel xs ys (fromTables t table)
+      | otherwise = sel xs ys (fromTables t column)
+      where
+        column = tableFromColumn x y table
+
+tableFromColumn name h (Table header rows) = Table [h] (map (\x -> [x !! i]) rows)
+  where
+    i = fromMaybe err (elemIndex name header)
+    err = error ("No column with name: " ++ name)
 
 pad a n x xs
     | n < 1          = error "pad: Length must not be smaller than one"

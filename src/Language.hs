@@ -7,9 +7,12 @@ import Table;
 
 data Statement = Seq [Statement]
   | Load String
-  | Select [String] String Statement
+  | Select [Col] String Statement
+  | SelectString String Statement
   | Skip String
   deriving (Show)
+
+data Col = Col String String deriving (Show)
 
 languageDef = emptyDef {
   Token.commentLine = "//",
@@ -18,7 +21,8 @@ languageDef = emptyDef {
   Token.reservedNames = [
     "load",
     "select",
-    "from"
+    "from",
+    "as"
   ],
   Token.caseSensitive = False
 }

@@ -35,7 +35,19 @@ select = do
   table <- name
   Select cols table <$> statement
 
-cols = sepBy1 name comma
+cols = sepBy1 col comma
+col = colWithName <|> simpleCol
+
+colWithName = do
+  col <- name
+  if col == "*" then return $ Col "*" "*"
+  else do
+    reserved "as"
+    Col col <$> name
+
+simpleCol = do
+  col <- name
+  return $ Col col col
 
 skip = Skip <$> name
 end = do
