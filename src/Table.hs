@@ -1,20 +1,21 @@
 module Table
   (
     Table ( .. ),
-    fromList
+    empty,
+    fromList,
+    select
   ) where
 
 import Data.List;
 import Prelude hiding (Left, Right)
 import Data.Maybe
 
-data Table = Empty | Table {
+data Table = Table {
   header :: [String],
   rows :: [[Maybe String]]
 }
 
 instance Show Table where
-  show Empty = ""
   show (Table h table) = unlines (intersperse sep (header : rows))
     where
       t = map (map unpack) table
@@ -29,6 +30,24 @@ instance Show Table where
 fromList list = Table (head list) (pack (tail list))
 pack = map (map packString)
 packString s = if null s then Nothing else Just s
+
+empty = Table [] []
+
+select cols table = sel cols empty
+  where
+    sel [] t = t
+    sel (x:xs) t@(Table h rows)
+      | x == "*" = sel xs (sel (header table) t)
+      | otherwise = sel xs (Table (h ++ [h']) (merge rows rows'))
+      where (h', rows') = column x table
+
+column name (Table header rows) = (header !! i, map (\x -> [x !! i]) rows)
+  where
+    i = fromMaybe err  (elemIndex name header)
+    err = error ("No column with name: " ++ name)
+
+merge (x:xs) (y:ys) = (x ++ y) : merge xs ys
+merge [] ys = ys
 
 data Alignment = Left | Right | Center deriving Eq
 

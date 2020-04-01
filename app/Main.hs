@@ -9,5 +9,5 @@ main = prompt showParse
 
 showParse input = do
   let statement = parseString input
-  table <- execute statement
-  putStrLn table
+  res <- execute statement
+  putStrLn res

@@ -6,10 +6,19 @@ module Interpreter
 import Language
 import Table
 import Parser
-import qualified Data.Map.Strict as Map
+import Data.List;
+
+createTable name = do
+  content <- parseFile name
+  return $ fromList content
 
 execute (Load file) = do
-  content <- parseFile file
-  return $ show $ fromList content
+  table <- createTable file
+  return $ show table
+
+execute (Select cols name stmt) = do
+  t <- createTable name
+  let table = select cols t
+  return $ show table
 
 execute (Skip stm) = return $ "Cannot procces: " ++ stm
