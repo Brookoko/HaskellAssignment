@@ -10,7 +10,10 @@ statement' =
 
 load = do
   reserved "load"
-  Load <$> identifier
+  file <- parens name
+  return $ Load file
 
-skip = return Skip
+name = stringLiteral <|> identifier
+
+skip = Skip <$> name
 

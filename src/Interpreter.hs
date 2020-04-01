@@ -10,6 +10,6 @@ import qualified Data.Map.Strict as Map
 
 execute (Load file) = do
   content <- parseFile file
-  return $ fromList content
+  return $ show $ fromList content
 
-execute _ = return Empty
+execute (Skip stm) = return $ "Cannot procces: " ++ stm

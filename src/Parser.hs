@@ -16,6 +16,7 @@ data Parser = Parser {
 }
 
 parsers = [ Parser parseCsv "csv",  Parser parseTsv "tsv", Parser parseCsv "json" ]
+nameToFile = ["assets/map_zal-skl9.csv", "assets/mp-assistants.csv", "mp-posts_full.csv", "mps-declarations_rada.csv", "plenary_register_mps-skl9.tsv" ]
 
 parseTsv content = map (splitOn "\t") (lines content)
 
@@ -41,13 +42,15 @@ replace x y s
   | null s = ""
   | otherwise = head s : replace x y (tail s)
 
-parseFile file = do
+parseFile name = do
+  let files = filter (name `isInfixOf`) nameToFile
+  let file = if null files then "" else head files
   isExist <- doesFileExist file
   if isExist
     then do
       content <- readFile file
       return $ parse (parserByFileExtension file) content
-    else error $ "No file with name: " ++ file
+    else error $ "No file with name: " ++ name
 
 parserByFileExtension file = head $ filter isSuitable parsers
   where isSuitable = canWorkWith (fileExtension file)

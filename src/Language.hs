@@ -6,7 +6,7 @@ import qualified Text.ParserCombinators.Parsec.Token as Token
 
 data Statement = Seq [Statement]
   | Load String
-  | Skip
+  | Skip String
   deriving (Show)
 
 languageDef = emptyDef {
@@ -26,3 +26,4 @@ reservedOp = Token.reservedOp lexer
 parens = Token.parens lexer
 semi = Token.semi lexer
 whiteSpace = Token.whiteSpace lexer
+stringLiteral = Token.stringLiteral lexer

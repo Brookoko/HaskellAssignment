@@ -10,4 +10,4 @@ main = prompt showParse
 showParse input = do
   let statement = parseString input
   table <- execute statement
-  print table
+  putStrLn table
