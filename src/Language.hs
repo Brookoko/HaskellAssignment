@@ -13,7 +13,7 @@ data BoolExpr = BoolConst Bool
 
 data BoolBinaryOp = And | Or | Between deriving (Show)
 
-data RelationBinaryOp = Greater | GreaterThan | Less | LessThan | Equal deriving (Show)
+data RelationBinaryOp = Equal | NotEqual | Greater | GreaterThan | Less | LessThan deriving (Show)
 
 data ArithmeticExpr = Var String
   | IntConst Integer

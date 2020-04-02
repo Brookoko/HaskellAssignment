@@ -105,6 +105,7 @@ relationExpression = do
   RelationBinary op expr <$> arithmeticExpression
 
 relation =
+  (reservedOp "<>" >> return NotEqual) <|>
   (reservedOp "=" >> return Equal) <|>
   (reservedOp ">" >> return Greater) <|>
   (reservedOp ">=" >> return GreaterThan) <|>

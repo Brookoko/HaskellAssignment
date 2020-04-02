@@ -60,6 +60,7 @@ evaluateBool op@(RelationBinary _ expr1 expr2) row = do
     isJust y && evaluateSafely op (fromJust x) (fromJust y))
   where
     evaluateSafely (RelationBinary Equal _ _) x y = x == y
+    evaluateSafely (RelationBinary NotEqual _ _) x y = x /= y
     evaluateSafely (RelationBinary Greater _ _) x y = x > y
     evaluateSafely (RelationBinary GreaterThan _ _) x y = x >= y
     evaluateSafely (RelationBinary Less _ _) x y = x < y
