@@ -14,21 +14,21 @@ loadTable name = do
   content <- parseFile name
   return $ fromList content
 
-columns = map (\(Col col _ _) -> col)
-names = map (\(Col _ name _) -> name)
+columns = map (\(Col col _) -> col)
+names = map (\(Col _ name) -> name)
 
 tableFromCols cols = fromList (names cols : [columns cols])
-
 selectFromTable cols = select (columns cols) (names cols)
+dist process table = if process then distinct table else table
 
 execute (Load file) = do
   table <- loadTable file
   return $ show table
 
-execute (Select cols stmt) = do
+execute (Select process cols stmt) = do
   t <- tableExpression stmt empty ""
   let table = if isEmpty t then tableFromCols cols else selectFromTable cols t
-  return $ show table
+  return $ show $ dist process table
 
 execute (Skip stm) = return $ "Cannot procces: " ++ stm
 

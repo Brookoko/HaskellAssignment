@@ -7,12 +7,12 @@ import Table;
 
 data Statement = Seq [Statement]
   | Load String
-  | Select [Col] Statement
+  | Select Bool [Col] Statement
   | From String Statement
   | Skip String
   deriving (Show)
 
-data Col = Col String String Bool deriving (Show)
+data Col = Col String String deriving (Show)
 
 languageDef = emptyDef {
   Token.commentLine = "--",

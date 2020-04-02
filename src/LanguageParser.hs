@@ -31,25 +31,27 @@ load = do
 
 select = do
   reserved "select"
+  distinctSelect <|> simpleSelect False
+
+distinctSelect = do
+  try $ reserved "distinct"
+  simpleSelect True
+
+simpleSelect dist = do
   cols <- cols
-  Select cols <$> statement'
+  Select dist cols <$> statement'
 
-cols = sepBy1 (distCol <|> col False) comma
+cols = sepBy1 col comma
 
-distCol = do
-  reserved "distinct"
-  col True
-
-col dist = do
+col = do
   col <- name
-  colWithName col dist <|> simpleCol col dist
+  colWithName col <|> simpleCol col
 
-colWithName col dist = do
+colWithName col = do
   try $ reserved "as"
-  n <- name
-  return $ Col col n dist
+  Col col <$> name
 
-simpleCol col dist = return $ Col col col dist
+simpleCol col = return $ Col col col
 
 from = do
   reserved "from"
