@@ -66,6 +66,9 @@ evaluateBool op@(RelationBinary _ expr1 expr2) row = do
     evaluateSafely (RelationBinary Less _ _) x y = x < y
     evaluateSafely (RelationBinary LessThan _ _) x y = x <= y
 
+evaluateBool (RelationTernary Between expr1 expr2 expr3) row =
+  evaluateBool (RelationBinary GreaterThan expr1 expr2) row && evaluateBool (RelationBinary LessThan expr1 expr3) row
+
 evaluateArithmetic (Var var) row = readMaybe $ fromMaybe "" variable
   where variable = snd $ fromMaybe ("", Just "") (find ((== var) . fst) row)
 evaluateArithmetic (IntConst int) row = Just int

@@ -86,7 +86,6 @@ arithmeticOperators = [
 boolOperators = [
   [Prefix (reservedOp "not" >> return Not)],
   [Infix (reservedOp "and" >> return (BoolBinary And)) AssocLeft],
-  [Infix (reservedOp "between" >> return (BoolBinary Between)) AssocLeft],
   [Infix (reservedOp "or" >> return (BoolBinary Or)) AssocLeft]]
 
 arithmeticTerm =
@@ -94,15 +93,24 @@ arithmeticTerm =
   Var <$> name <|>
   IntConst <$> integer
 
-boolTerm = parens boolExpression
-     <|> (reserved "true" >> return (BoolConst True))
-     <|> (reserved "false" >> return (BoolConst False))
-     <|> relationExpression
+boolTerm = parens boolExpression <|>
+  (reserved "true" >> return (BoolConst True)) <|>
+  (reserved "false" >> return (BoolConst False)) <|>
+  relationExpr
 
-relationExpression = do
-  expr <- parens arithmeticExpression <|> arithmeticExpression
+relationExpr = do
+  expr <- arithmeticExpression
+  relationBinary expr <|> betweenExpression expr
+
+relationBinary expr = do
   op <- relation
   RelationBinary op expr <$> arithmeticExpression
+
+betweenExpression expr1 = do
+  reserved "between"
+  expr2 <- arithmeticExpression
+  reserved "and"
+  RelationTernary Between expr1 expr2 <$> arithmeticExpression
 
 relation =
   (reservedOp "<>" >> return NotEqual) <|>

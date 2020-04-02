@@ -9,17 +9,19 @@ data BoolExpr = BoolConst Bool
   | Not BoolExpr
   | BoolBinary BoolBinaryOp BoolExpr BoolExpr
   | RelationBinary RelationBinaryOp ArithmeticExpr ArithmeticExpr
+  | RelationTernary RelationTernaryOp ArithmeticExpr ArithmeticExpr ArithmeticExpr
   deriving (Show)
 
-data BoolBinaryOp = And | Or | Between deriving (Show)
+data BoolBinaryOp = And | Or deriving (Show)
 
 data RelationBinaryOp = Equal | NotEqual | Greater | GreaterThan | Less | LessThan deriving (Show)
+data RelationTernaryOp = Between deriving (Show)
 
 data ArithmeticExpr = Var String
   | IntConst Integer
   | Neg ArithmeticExpr
   | ArithmeticBinary ArithmeticBinaryOp ArithmeticExpr ArithmeticExpr
-   deriving (Show)
+  deriving (Show)
 
 data ArithmeticBinaryOp = Add
   | Subtract
