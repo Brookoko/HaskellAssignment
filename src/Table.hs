@@ -3,6 +3,7 @@ module Table
     Table ( .. ),
     empty,
     fromList,
+    isEmpty,
     select
   ) where
 
@@ -38,6 +39,9 @@ merge (x:xs) (y:ys) = (x ++ y) : merge xs ys
 merge [] ys = ys
 
 empty = Table [] []
+
+isEmpty (Table [] []) = True
+isEmpty _ = False
 
 select cols names table = sel cols names empty
   where

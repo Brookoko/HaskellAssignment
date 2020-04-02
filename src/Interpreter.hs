@@ -17,23 +17,22 @@ loadTable name = do
 columns = map (\(Col col _ _) -> col)
 names = map (\(Col _ name _) -> name)
 
-
 tableFromCols cols = fromList (names cols : [columns cols])
+
+selectFromTable cols = select (columns cols) (names cols)
 
 execute (Load file) = do
   table <- loadTable file
   return $ show table
 
 execute (Select cols stmt) = do
-  let table = tableFromCols cols
-  t <- tableExpression stmt table
-  return $ show t
+  t <- tableExpression stmt empty ""
+  let table = if isEmpty t then tableFromCols cols else selectFromTable cols t
+  return $ show table
 
 execute (Skip stm) = return $ "Cannot procces: " ++ stm
 
-tableExpression :: Statement -> Table -> IO Table
-tableExpression (From name stmt) (Table names columns) = do
-  t <- loadTable name
-  let table = select (map (fromMaybe "" . head) columns) names t
-  tableExpression stmt table
-tableExpression _ table = return table
+tableExpression (From name stmt) (Table names columns) _ = do
+  table <- loadTable name
+  tableExpression stmt table name
+tableExpression _ table _ = return table
