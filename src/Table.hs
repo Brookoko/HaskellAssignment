@@ -4,6 +4,7 @@ module Table
     empty,
     fromList,
     isEmpty,
+    columnIndex,
     select,
     distinct
   ) where
@@ -55,6 +56,9 @@ empty = Table [] []
 isEmpty (Table [] []) = True
 isEmpty _ = False
 
+columnIndex name (Table header _) = fromMaybe err (elemIndex name header)
+  where err = error ("No column with name: " ++ name)
+
 select cols names table = sel cols names empty
   where
     sel [] _ t = t
@@ -64,10 +68,8 @@ select cols names table = sel cols names empty
       where
         column = tableFromColumn x y table
 
-tableFromColumn name h (Table header rows) = Table [h] (map (\x -> [x !! i]) rows)
-  where
-    i = fromMaybe err (elemIndex name header)
-    err = error ("No column with name: " ++ name)
+tableFromColumn name h t@(Table header rows) = Table [h] (map (\x -> [x !! i]) rows)
+  where i = columnIndex name t
 
 distinct (Table header rows) = Table header (dist rows)
   where

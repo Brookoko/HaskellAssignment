@@ -10,6 +10,19 @@ import Data.List
 import Control.Monad
 import Data.Maybe
 import Text.Read
+import Data.Ord
+
+data Comparable = CompInt Integer | CompString (Maybe String)
+
+instance Eq Comparable where
+  (CompInt x) == (CompInt y) = x == y
+  (CompString x) == (CompString y) = x == y
+
+instance Ord Comparable where
+  compare (CompInt x) (CompInt y) = compare x y
+  compare (CompString x) (CompString y) = compare x y
+  compare (CompInt x) (CompString y) = LT
+  compare (CompString x) (CompInt y) = GT
 
 loadTable name = do
   content <- parseFile name
@@ -37,13 +50,23 @@ tableExpression (From name stmt) (Table header rows) = do
   table <- loadTable name
   tableExpression stmt table
 
-tableExpression (Where expr) (Table header rows) = return $ Table header (exec rows)
+tableExpression (Where expr stmt) (Table header rows) = tableExpression stmt (Table header (exec rows))
   where
-    exec :: [[Maybe String]] -> [[Maybe String]]
     exec (x:xs)
       | evaluateBool expr (zip header x) = x : exec xs
       | otherwise = exec xs
     exec _ = []
+
+tableExpression (OrderBy (x:xs) stmt) t@(Table header rows) = tableExpression (OrderBy xs stmt) (Table header (order x))
+  where
+    p (ColumnOrder n Ascending) = n
+    order :: ColumnOrder -> [[Maybe String]]
+    order (ColumnOrder n Ascending) = sortOn (sort n) rows
+    order (ColumnOrder n Descending) = sortOn (Down . sort n) rows
+    sort n x = convert $ x !! columnIndex n t
+    convert x = maybe (CompString x) CompInt (readMaybe (fromMaybe "" x))
+
+tableExpression (OrderBy _ stmt) table = tableExpression stmt table
 
 tableExpression _ table = return table
 

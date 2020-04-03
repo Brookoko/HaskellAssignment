@@ -33,11 +33,15 @@ data Statement = Seq [Statement]
   | Load String
   | Select Bool [Col] Statement
   | From String Statement
-  | Where BoolExpr
+  | Where BoolExpr Statement
+  | OrderBy [ColumnOrder] Statement
   | Skip String
   deriving (Show)
 
 data Col = Col String String deriving (Show)
+
+data ColumnOrder = ColumnOrder String OrderType deriving (Show)
+data OrderType = Ascending | Descending deriving (Show)
 
 languageDef = emptyDef {
   Token.commentLine = "--",
@@ -56,7 +60,11 @@ languageDef = emptyDef {
     "or",
     "between",
     "true",
-    "false"
+    "false",
+    "order",
+    "by",
+    "asc",
+    "desc"
   ],
   Token.reservedOpNames = [
     "+", "-", "*", "/", "=",

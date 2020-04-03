@@ -23,6 +23,7 @@ statement' =
   from <|>
   skip <|>
   where' <|>
+  order <|>
   end
 
 name = stringLiteral <|> identifier
@@ -63,7 +64,25 @@ from = do
 
 where' = do
   reserved "where"
-  Where <$> boolExpression
+  expr <- boolExpression
+  Where expr <$> statement'
+
+order = do
+  reserved "order"
+  reserved "by"
+  cols <- orderCols
+  OrderBy (reverse cols) <$> statement'
+
+orderCols = sepBy1 orderCol comma
+
+orderCol = do
+  col <- name
+  ColumnOrder col <$> orderType
+
+orderType =
+  (reserved "asc" >> return Ascending) <|>
+  (reserved "desc" >> return Descending) <|>
+  return Ascending
 
 skip = Skip <$> name
 end = do
