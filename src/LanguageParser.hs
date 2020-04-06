@@ -53,9 +53,9 @@ col = do
 
 colWithName col = do
   try $ reserved "as"
-  Col col <$> name
+  ColumnName col <$> name
 
-simpleCol col = return $ Col col col
+simpleCol col = return $ ColumnName col col
 
 from = do
   reserved "from"
@@ -88,11 +88,6 @@ skip = Skip <$> name
 end = do
   eof
   return $ Skip "no input"
-
-parseString str =
-  case parse whileParser "" str of
-    Left e  -> error $ show e
-    Right r -> r
 
 arithmeticExpression = buildExpressionParser arithmeticOperators arithmeticTerm
 boolExpression = buildExpressionParser boolOperators boolTerm
@@ -138,3 +133,8 @@ relation =
   (reservedOp ">=" >> return GreaterThan) <|>
   (reservedOp "<" >> return Less) <|>
   (reservedOp "<=" >> return LessThan)
+
+parseString str =
+  case parse whileParser "" str of
+    Left e  -> error $ show e
+    Right r -> r

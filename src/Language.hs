@@ -29,18 +29,24 @@ data ArithmeticBinaryOp = Add
   | Divide
   deriving (Show)
 
+data AggregationFunction = Min | Max | Avg | Med | Sum deriving (Show)
+
 data Statement = Seq [Statement]
   | Load String
-  | Select Bool [Col] Statement
+  | Select Bool [Language.Column] Statement
   | From String Statement
   | Where BoolExpr Statement
-  | OrderBy [ColumnOrder] Statement
+  | OrderBy [Language.Column] Statement
   | Skip String
   deriving (Show)
 
-data Col = Col String String deriving (Show)
+data Column = ColumnSimple String
+  | ColumnName String String
+  | ColumnOrder String OrderType
+  | ColumnDistinct String Bool
+  | AggregationColumn AggregationFunction Language.Column
+  deriving (Show)
 
-data ColumnOrder = ColumnOrder String OrderType deriving (Show)
 data OrderType = Ascending | Descending deriving (Show)
 
 languageDef = emptyDef {
@@ -64,7 +70,12 @@ languageDef = emptyDef {
     "order",
     "by",
     "asc",
-    "desc"
+    "desc",
+    "min",
+    "max",
+    "avg",
+    "med",
+    "sum"
   ],
   Token.reservedOpNames = [
     "+", "-", "*", "/", "=",

@@ -50,6 +50,7 @@ packString s = if null s then Nothing else Just s
 fromTables (Table h1 rows1) (Table h2 rows2) = Table (h1 ++ h2) (merge rows1 rows2)
 merge (x:xs) (y:ys) = (x ++ y) : merge xs ys
 merge [] ys = ys
+merge xs [] = []
 
 empty = Table [] []
 
