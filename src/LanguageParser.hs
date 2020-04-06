@@ -35,27 +35,42 @@ load = do
 
 select = do
   reserved "select"
-  distinctSelect <|> simpleSelect False
-
-distinctSelect = do
-  try $ reserved "distinct"
-  simpleSelect True
-
-simpleSelect dist = do
+  distinct <- isDistinct
   cols <- cols
-  Select dist cols <$> statement'
+  Select distinct cols <$> statement'
 
-cols = sepBy1 col comma
+isDistinct = (reserved "distinct" >> return True) <|> return False
 
-col = do
+cols = sepBy1 tableColumn comma
+
+tableColumn = aggregationColumn <|> column
+
+aggregationColumn = do
+  function <- aggregationFunction
+  col <- parens distinctColumn
+  name <- (reserved "as" >> name) <|> aggregateToString function col
+  return $ AggregationColumn function col name
+
+aggregateToString func (ColumnDistinct distinct name) = return $ show func ++ "(" ++ dist ++ name ++ ")"
+  where dist = if distinct then "distinct " else ""
+
+distinctColumn = do
+  distinct <- isDistinct
+  ColumnDistinct distinct <$> name
+
+aggregationFunction =
+  (reserved "min" >> return Min) <|>
+  (reserved "max" >> return Max) <|>
+  (reserved "avg" >> return Avg) <|>
+  (reserved "sum" >> return Sum)
+
+column = do
   col <- name
   colWithName col <|> simpleCol col
 
-colWithName col = do
-  try $ reserved "as"
-  ColumnName col <$> name
+colWithName col = reserved "as" >> ColumnName col <$> name
 
-simpleCol col = return $ ColumnName col col
+simpleCol col = return $ ColumnSimple col
 
 from = do
   reserved "from"

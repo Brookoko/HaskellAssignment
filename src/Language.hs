@@ -29,7 +29,7 @@ data ArithmeticBinaryOp = Add
   | Divide
   deriving (Show)
 
-data AggregationFunction = Min | Max | Avg | Med | Sum deriving (Show)
+data AggregationFunction = Min | Max | Avg | Sum deriving (Show)
 
 data Statement = Seq [Statement]
   | Load String
@@ -43,8 +43,8 @@ data Statement = Seq [Statement]
 data Column = ColumnSimple String
   | ColumnName String String
   | ColumnOrder String OrderType
-  | ColumnDistinct String Bool
-  | AggregationColumn AggregationFunction Language.Column
+  | ColumnDistinct Bool String
+  | AggregationColumn AggregationFunction Language.Column String
   deriving (Show)
 
 data OrderType = Ascending | Descending deriving (Show)
