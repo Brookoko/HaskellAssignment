@@ -29,7 +29,7 @@ data ArithmeticBinaryOp = Add
   | Divide
   deriving (Show)
 
-data AggregationFunction = Min | Max | Avg | Sum deriving (Show)
+data AggregationFunction = Min | Max | Avg | Sum | Count deriving (Show)
 
 data Statement = Seq [Statement]
   | Load String
@@ -71,6 +71,7 @@ languageDef = emptyDef {
     "by",
     "asc",
     "desc",
+    "count",
     "min",
     "max",
     "avg",

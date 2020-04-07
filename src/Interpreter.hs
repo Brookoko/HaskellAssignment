@@ -51,7 +51,7 @@ selectFromTable _ target _ = target
 evaluateAggregation f@(AggregationColumn _ (ColumnDistinct isDistinct name) h) t@(Table header rows) =
   Table [h] [[aggregate f (map head (tryDistinctRows isDistinct rows))]]
     where
-      aggregate :: Column -> [Maybe String] -> Maybe String
+      aggregate (AggregationColumn Count _ _) list = Just $ show $ length list
       aggregate (AggregationColumn Min _ _) list = minimumBy comp list
       aggregate (AggregationColumn Max _ _) list = maximumBy comp list
       aggregate (AggregationColumn Avg _ _) list = Just $ show $ average list

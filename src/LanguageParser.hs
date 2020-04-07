@@ -59,6 +59,7 @@ distinctColumn = do
   ColumnDistinct distinct <$> name
 
 aggregationFunction =
+  (reserved "count" >> return Count) <|>
   (reserved "min" >> return Min) <|>
   (reserved "max" >> return Max) <|>
   (reserved "avg" >> return Avg) <|>
