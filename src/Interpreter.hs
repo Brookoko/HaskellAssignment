@@ -34,8 +34,14 @@ loadTable name = do
   content <- parseFile name
   return $ fromList content
 
-columns = map (\(ColumnName col _) -> col)
-names = map (\(ColumnName _ name) -> name)
+columns = map getColumn
+names = map getName
+
+getColumn (ColumnName col _) = col
+getColumn (ColumnSimple col) = col
+
+getName (ColumnName _ name) = name
+getName (ColumnSimple name) = name
 
 tableFromCols cols = fromList (names cols : [columns cols])
 
