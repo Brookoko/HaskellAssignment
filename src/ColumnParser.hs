@@ -14,12 +14,12 @@ aggregationColumn = do
   name <- (reserved "as" >> name) <|> aggregateToString function col
   return $ AggregationColumn function col name
 
-aggregateToString func (ColumnDistinct distinct name) = return $ show func ++ "(" ++ dist ++ name ++ ")"
+aggregateToString func (ColumnDistinct distinct name) = return $ show func ++ "(" ++ dist ++ show name ++ ")"
   where dist = if distinct then "distinct " else ""
 
 distinctColumn = do
   distinct <- isDistinct
-  ColumnDistinct distinct <$> name
+  ColumnDistinct distinct <$> columnName
 
 isDistinct = (reserved "distinct" >> return True) <|> return False
 
@@ -31,7 +31,7 @@ aggregationFunction =
   (reserved "sum" >> return Sum)
 
 column = do
-  col <- name
+  col <- columnName
   colWithName col <|> simpleCol col
 
 colWithName col = reserved "as" >> ColumnWithName col <$> name
@@ -40,10 +40,19 @@ simpleCol col = return $ ColumnSimple col
 orderCols = sepBy1 orderCol comma
 
 orderCol = do
-  col <- name
+  col <- columnName
   ColumnOrder col <$> orderType
 
 orderType =
   (reserved "asc" >> return Ascending) <|>
   (reserved "desc" >> return Descending) <|>
   return Ascending
+
+columnName = do
+  n <- name
+  d <- hasDot
+  if d then tableAndColumn n else justColumn n
+
+hasDot = (dot >> return True) <|> return False
+tableAndColumn table = ColumnAndTable table <$> name
+justColumn name = return $ JustColumn name

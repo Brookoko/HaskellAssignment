@@ -22,9 +22,9 @@ loadTable table name = do
 
 selectFromTable (x:xs) target ref = selectFromTable xs (fromTables target (colToTable x)) ref
   where
-    colToTable (ColumnSimple name) = tableFromColumn name name ref
+    colToTable (ColumnSimple name) = tableFromColumn name (toString name) ref
     colToTable (ColumnWithName name name') = tableFromColumn name name' ref
-    colToTable (ColumnDistinct _ name) = tableFromColumn name name ref
+    colToTable (ColumnDistinct _ name) = tableFromColumn name (toString name) ref
     colToTable f@(AggregationColumn _ col _) = Agg.evaluate f (colToTable col)
 
 selectFromTable _ target _ = target
@@ -55,10 +55,9 @@ tableExpression (Where expr stmt) (Table n header rows) = tableExpression stmt (
 
 tableExpression (OrderBy (x:xs) stmt) t@(Table n header rows) = tableExpression (OrderBy xs stmt) (Table n header (order x))
   where
-    p (ColumnOrder n Ascending) = n
     order (ColumnOrder n Ascending) = sortOn (sort n) rows
     order (ColumnOrder n Descending) = sortOn (Down . sort n) rows
-    sort n x = convert $ x !! columnIndex n t
+    sort n x = convert $ x !! columnIndex (toColumn n) t
 
 tableExpression (OrderBy _ stmt) table = tableExpression stmt table
 

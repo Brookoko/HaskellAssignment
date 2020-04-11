@@ -40,14 +40,14 @@ data Statement = Seq [Statement]
   | End
   deriving (Show)
 
-data Column = ColumnSimple String
-  | ColumnWithName String String
-  | ColumnOrder String OrderType
-  | ColumnDistinct Bool String
+data Column = ColumnSimple ColumnName
+  | ColumnWithName ColumnName String
+  | ColumnOrder ColumnName OrderType
+  | ColumnDistinct Bool ColumnName
   | AggregationColumn AggregationFunction Language.Column String
   deriving (Show)
 
-data ColumnName = ColumnAndTable String String | JustColumn String deriving (Show)
+data ColumnName = ColumnAndTable String String | JustColumn String deriving(Show)
 
 data OrderType = Ascending | Descending deriving (Show)
 
@@ -99,5 +99,6 @@ whiteSpace = Token.whiteSpace lexer
 stringLiteral = Token.stringLiteral lexer
 integer = Token.integer lexer
 comma = Token.comma lexer
+dot = Token.dot lexer
 
 name = stringLiteral <|> identifier
