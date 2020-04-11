@@ -85,6 +85,7 @@ execute (Select isDistinct cols stmt) = do
   return $ show $ tryDistinct isDistinct table
 
 execute (Skip stm) = return $ "Cannot procces: " ++ stm
+execute End = return "No input"
 
 tableExpression (From name stmt) (Table header rows) = do
   table <- loadTable name
@@ -106,4 +107,5 @@ tableExpression (OrderBy (x:xs) stmt) t@(Table header rows) = tableExpression (O
 
 tableExpression (OrderBy _ stmt) table = tableExpression stmt table
 
-tableExpression _ table = return table
+tableExpression (Skip input) table = error $ "Parsing error near " ++ input
+tableExpression End table = return table

@@ -103,7 +103,7 @@ orderType =
 skip = Skip <$> name
 end = do
   eof
-  return $ Skip "no input"
+  return End
 
 arithmeticExpression = buildExpressionParser arithmeticOperators arithmeticTerm
 boolExpression = buildExpressionParser boolOperators boolTerm

@@ -38,6 +38,7 @@ data Statement = Seq [Statement]
   | Where BoolExpr Statement
   | OrderBy [Language.Column] Statement
   | Skip String
+  | End
   deriving (Show)
 
 data Column = ColumnSimple String
