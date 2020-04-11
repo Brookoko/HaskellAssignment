@@ -4,7 +4,8 @@ module Table
     empty,
     fromList,
     fromTables,
-    isEmpty
+    isEmpty,
+    hasNoData
   ) where
 
 import Data.List;
@@ -57,3 +58,6 @@ empty = Table "" [] []
 
 isEmpty (Table "" [] []) = True
 isEmpty _ = False
+
+hasNoData (Table _ _ []) = True
+hasNoData _ = False

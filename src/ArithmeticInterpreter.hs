@@ -4,9 +4,13 @@ import Language
 import Data.Maybe
 import Text.Read
 import Data.List
+import TableFunctions
+import Table
 
-evaluate (Var var) row = readMaybe $ fromMaybe "" variable
-  where variable = snd $ fromMaybe ("", Just "") (find ((== var) . fst) row)
+evaluate (Var var) row = readMaybe $ fromMaybe "" (variable t)
+  where
+    t = tableFromColumn' var (toColumn var) row
+    variable (Table name header rows) = head $ head rows
 evaluate (IntConst int) row = Just int
 evaluate (Neg expr) row = do
   let x = evaluate expr row

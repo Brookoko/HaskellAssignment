@@ -17,7 +17,7 @@ data BoolBinaryOp = And | Or deriving (Show)
 data RelationBinaryOp = Equal | NotEqual | Greater | GreaterThan | Less | LessThan deriving (Show)
 data RelationTernaryOp = Between deriving (Show)
 
-data ArithmeticExpr = Var String
+data ArithmeticExpr = Var ColumnName
   | IntConst Integer
   | Neg ArithmeticExpr
   | ArithmeticBinary ArithmeticBinaryOp ArithmeticExpr ArithmeticExpr

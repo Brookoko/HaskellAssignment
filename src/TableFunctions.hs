@@ -29,10 +29,31 @@ distinctRows _ = []
 tryDistinct isDistinct table = if isDistinct then distinct table else table
 tryDistinctRows isDistinct rows = if isDistinct then distinctRows rows else rows
 
-tableFromColumn name h t@(Table n header rows)
-  | toColumn name == "*" = t
-  | otherwise = Table n [h] (map (\x -> [x !! i]) rows)
-    where i = columnIndex (toColumn name) t
+tableFromColumn columnName alias t@(Table n header rows)
+  | column == "*" = t
+  | hasColumn column t = Table n [alias] (map (\x -> [x !! i]) rows)
+  | otherwise = empty
+    where
+      column = toColumn columnName
+      i = columnIndex column t
 
-columnIndex name (Table n header _) = fromMaybe err (elemIndex name header)
-  where err = error ("No column with name: " ++ name)
+hasColumn n (Table name header rows) = n `elem` header
+columnIndex name (Table n header _) = fromMaybe (columnMissing name) (elemIndex name header)
+columnMissing name = error $ "No column with name " ++ name
+
+tableFromColumn' columnName alias = from columnName
+  where
+    from (ColumnAndTable t n) (x:xs)
+      | t == Table.name x && n == "*" = x
+      | t == Table.name x && hasColumn n x = tableFromColumn columnName alias x
+      | otherwise = from columnName xs
+    from (JustColumn n) xs'@(x:xs)
+      | n == "*" = foldl fromTables empty xs'
+      | n /= "*" && hasColumn n x && any (hasColumn n) xs =
+        error $ "Multipler entry of " ++ toString columnName ++ ". Specify column name"
+      | hasColumn n x = tableFromColumn columnName alias x
+      | otherwise = from columnName xs
+    from _ [] = columnMissing (toString columnName)
+
+columnValue column t@(Table name header rows) = map (!! i) rows
+  where i = columnIndex column t

@@ -4,6 +4,7 @@ import Text.ParserCombinators.Parsec
 import Text.Parsec.Expr
 import Control.Monad
 import Language
+import ColumnParser
 
 arithmeticExpression = buildExpressionParser arithmeticOperators arithmeticTerm
 boolExpression = buildExpressionParser boolOperators boolTerm
@@ -20,7 +21,7 @@ boolOperators = [
 
 arithmeticTerm =
   parens arithmeticExpression <|>
-  Var <$> name <|>
+  Var <$> columnName <|>
   IntConst <$> integer
 
 boolTerm = parens boolExpression <|>
