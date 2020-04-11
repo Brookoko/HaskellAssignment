@@ -54,8 +54,10 @@ fromTables (Table h1 rows1) (Table h2 rows2) = Table (h1 ++ h2) (merge rows1 row
     merge (x:xs) (y:ys) = (x ++ y) : merge xs ys
     merge _ _ = []
 
-tableFromColumn name h t@(Table header rows) = Table [h] (map (\x -> [x !! i]) rows)
-  where i = columnIndex name t
+tableFromColumn name h t@(Table header rows)
+  | name == "*" = t
+  | otherwise = Table [h] (map (\x -> [x !! i]) rows)
+    where i = columnIndex name t
 
 empty = Table [] []
 
