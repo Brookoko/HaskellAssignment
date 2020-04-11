@@ -14,6 +14,7 @@ import Prelude hiding (Left, Right)
 import Data.Maybe
 
 data Table = Table {
+  name :: String,
   header :: [String],
   rows :: [[Maybe String]]
 }
@@ -21,7 +22,7 @@ data Table = Table {
 data Alignment = Left | Right | Center deriving Eq
 
 instance Show Table where
-  show (Table h table) = unlines (intersperse sep (header : rows))
+  show (Table name h table) = unlines (intersperse sep (header : rows))
     where
       t = map (map unpack) table
       widths = map (min 60 . maximum . map length) (transpose (h:t))
@@ -43,26 +44,26 @@ pad a n x xs
     fill = replicate diff x
     diff = n - length xs
 
-fromList list = Table (head list) (pack (tail list))
+fromList name list = Table name (head list) (pack (tail list))
 pack = map (map packString)
 packString s = if null s then Nothing else Just s
 
-fromTables (Table [] []) (Table h rows) = Table h rows
-fromTables (Table h rows) (Table [] []) = Table h rows
-fromTables (Table h1 rows1) (Table h2 rows2) = Table (h1 ++ h2) (merge rows1 rows2)
+fromTables (Table "" [] []) (Table n h rows) = Table n h rows
+fromTables (Table n h rows) (Table "" [] []) = Table n h rows
+fromTables (Table n h1 rows1) (Table _ h2 rows2) = Table n (h1 ++ h2) (merge rows1 rows2)
   where
     merge (x:xs) (y:ys) = (x ++ y) : merge xs ys
     merge _ _ = []
 
-tableFromColumn name h t@(Table header rows)
+tableFromColumn name h t@(Table n header rows)
   | name == "*" = t
-  | otherwise = Table [h] (map (\x -> [x !! i]) rows)
+  | otherwise = Table n [h] (map (\x -> [x !! i]) rows)
     where i = columnIndex name t
 
-empty = Table [] []
+empty = Table "" [] []
 
-isEmpty (Table [] []) = True
+isEmpty (Table "" [] []) = True
 isEmpty _ = False
 
-columnIndex name (Table header _) = fromMaybe err (elemIndex name header)
+columnIndex name (Table n header _) = fromMaybe err (elemIndex name header)
   where err = error ("No column with name: " ++ name)

@@ -34,19 +34,20 @@ data AggregationFunction = Min | Max | Avg | Sum | Count deriving (Show)
 data Statement = Seq [Statement]
   | Load String
   | Select Bool [Language.Column] Statement
-  | From String Statement
+  | From String String Statement
   | Where BoolExpr Statement
   | OrderBy [Language.Column] Statement
-  | Skip String
   | End
   deriving (Show)
 
 data Column = ColumnSimple String
-  | ColumnName String String
+  | ColumnWithName String String
   | ColumnOrder String OrderType
   | ColumnDistinct Bool String
   | AggregationColumn AggregationFunction Language.Column String
   deriving (Show)
+
+data ColumnName = ColumnAndTable String String | JustColumn String deriving (Show)
 
 data OrderType = Ascending | Descending deriving (Show)
 

@@ -21,10 +21,10 @@ statement' =
   load <|>
   select <|>
   from <|>
-  skip <|>
   where' <|>
   order <|>
-  end
+  end <|>
+  skip
 
 name = stringLiteral <|> identifier
 
@@ -69,14 +69,15 @@ column = do
   col <- name
   colWithName col <|> simpleCol col
 
-colWithName col = reserved "as" >> ColumnName col <$> name
+colWithName col = reserved "as" >> ColumnWithName col <$> name
 
 simpleCol col = return $ ColumnSimple col
 
 from = do
   reserved "from"
-  n <- name
-  From n <$> statement'
+  table <- name
+  n <- try name <|> return table
+  From table n <$> statement'
 
 where' = do
   reserved "where"
@@ -100,10 +101,13 @@ orderType =
   (reserved "desc" >> return Descending) <|>
   return Ascending
 
-skip = Skip <$> name
 end = do
   eof
   return End
+
+skip = do
+  n <- name
+  error $ "Parsing error near " ++ n
 
 arithmeticExpression = buildExpressionParser arithmeticOperators arithmeticTerm
 boolExpression = buildExpressionParser boolOperators boolTerm

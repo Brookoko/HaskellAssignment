@@ -30,32 +30,32 @@ convert x = maybe (CompString x) CompInt (readMaybe (fromMaybe "" x))
 toInt (CompInt x) = x
 toInt _ = 0
 
-loadTable name = do
-  content <- parseFile name
-  return $ fromList content
+loadTable table name = do
+  content <- parseFile table
+  return $ fromList name content
 
 columns = map getColumn
 names = map getName
 
-getColumn (ColumnName col _) = col
+getColumn (ColumnWithName col _) = col
 getColumn (ColumnSimple col) = col
 
-getName (ColumnName _ name) = name
+getName (ColumnWithName _ name) = name
 getName (ColumnSimple name) = name
 
-tableFromCols cols = fromList (names cols : [columns cols])
+tableFromCols cols = fromList "" (names cols : [columns cols])
 
 selectFromTable (x:xs) target ref = selectFromTable xs (fromTables target (colToTable x)) ref
   where
     colToTable (ColumnSimple name) = tableFromColumn name name ref
-    colToTable (ColumnName name name') = tableFromColumn name name' ref
+    colToTable (ColumnWithName name name') = tableFromColumn name name' ref
     colToTable (ColumnDistinct _ name) = tableFromColumn name name ref
     colToTable f@(AggregationColumn _ col _) = evaluateAggregation f (colToTable col)
 
 selectFromTable _ target _ = target
 
-evaluateAggregation f@(AggregationColumn _ (ColumnDistinct isDistinct name) h) t@(Table header rows) =
-  Table [h] [[aggregate f (map head (tryDistinctRows isDistinct rows))]]
+evaluateAggregation f@(AggregationColumn _ (ColumnDistinct isDistinct name) h) t@(Table n header rows) =
+  Table n [h] [[aggregate f (map head (tryDistinctRows isDistinct rows))]]
     where
       aggregate (AggregationColumn Count _ _) list = Just $ show $ length list
       aggregate (AggregationColumn Min _ _) list = minimumBy comp list
@@ -67,7 +67,7 @@ evaluateAggregation f@(AggregationColumn _ (ColumnDistinct isDistinct name) h) t
       sum = foldr ((+) . toInt) 0
       average list = realToFrac(sum (convertList list)) / realToFrac(length list)
 
-distinct (Table header rows) = Table header (distinctRows rows)
+distinct (Table n header rows) = Table n header (distinctRows rows)
 
 distinctRows (x:xs) = x : distinctRows (filter (/=x) xs)
 distinctRows _ = []
@@ -76,7 +76,7 @@ tryDistinct isDistinct table = if isDistinct then distinct table else table
 tryDistinctRows isDistinct rows = if isDistinct then distinctRows rows else rows
 
 execute (Load file) = do
-  table <- loadTable file
+  table <- loadTable file file
   return $ show table
 
 execute (Select isDistinct cols stmt) = do
@@ -84,21 +84,20 @@ execute (Select isDistinct cols stmt) = do
   let table = if isEmpty t then tableFromCols cols else selectFromTable cols empty t
   return $ show $ tryDistinct isDistinct table
 
-execute (Skip stm) = return $ "Cannot procces: " ++ stm
 execute End = return "No input"
 
-tableExpression (From name stmt) (Table header rows) = do
-  table <- loadTable name
+tableExpression (From table name stmt) (Table n header rows) = do
+  table <- loadTable table name
   tableExpression stmt table
 
-tableExpression (Where expr stmt) (Table header rows) = tableExpression stmt (Table header (exec rows))
+tableExpression (Where expr stmt) (Table n header rows) = tableExpression stmt (Table n header (exec rows))
   where
     exec (x:xs)
       | BoolInterpreter.evaluate expr (zip header x) = x : exec xs
       | otherwise = exec xs
     exec _ = []
 
-tableExpression (OrderBy (x:xs) stmt) t@(Table header rows) = tableExpression (OrderBy xs stmt) (Table header (order x))
+tableExpression (OrderBy (x:xs) stmt) t@(Table n header rows) = tableExpression (OrderBy xs stmt) (Table n header (order x))
   where
     p (ColumnOrder n Ascending) = n
     order (ColumnOrder n Ascending) = sortOn (sort n) rows
@@ -107,5 +106,4 @@ tableExpression (OrderBy (x:xs) stmt) t@(Table header rows) = tableExpression (O
 
 tableExpression (OrderBy _ stmt) table = tableExpression stmt table
 
-tableExpression (Skip input) table = error $ "Parsing error near " ++ input
 tableExpression End table = return table
