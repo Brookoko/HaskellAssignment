@@ -9,5 +9,6 @@ main = prompt showParse
 
 showParse input = do
   let statement = parseString input
+  print statement
   res <- execute statement
   putStrLn res

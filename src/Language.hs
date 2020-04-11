@@ -99,3 +99,5 @@ whiteSpace = Token.whiteSpace lexer
 stringLiteral = Token.stringLiteral lexer
 integer = Token.integer lexer
 comma = Token.comma lexer
+
+name = stringLiteral <|> identifier

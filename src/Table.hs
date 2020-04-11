@@ -4,9 +4,7 @@ module Table
     empty,
     fromList,
     fromTables,
-    tableFromColumn,
-    isEmpty,
-    columnIndex
+    isEmpty
   ) where
 
 import Data.List;
@@ -55,15 +53,7 @@ fromTables (Table n h1 rows1) (Table _ h2 rows2) = Table n (h1 ++ h2) (merge row
     merge (x:xs) (y:ys) = (x ++ y) : merge xs ys
     merge _ _ = []
 
-tableFromColumn name h t@(Table n header rows)
-  | name == "*" = t
-  | otherwise = Table n [h] (map (\x -> [x !! i]) rows)
-    where i = columnIndex name t
-
 empty = Table "" [] []
 
 isEmpty (Table "" [] []) = True
 isEmpty _ = False
-
-columnIndex name (Table n header _) = fromMaybe err (elemIndex name header)
-  where err = error ("No column with name: " ++ name)
