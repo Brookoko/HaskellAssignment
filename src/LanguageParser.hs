@@ -26,6 +26,7 @@ statement' =
   where' <|>
   order <|>
   end <|>
+  innerJoin <|>
   skip
 
 load = do
@@ -41,9 +42,13 @@ select = do
 
 from = do
   reserved "from"
+  table <- tableName
+  From table <$> statement'
+
+tableName = do
   table <- name
   n <- try name <|> return table
-  From table n <$> statement'
+  return $ TableName table n
 
 where' = do
   reserved "where"
@@ -55,6 +60,14 @@ order = do
   reserved "by"
   cols <- orderCols
   OrderBy (reverse cols) <$> statement'
+
+innerJoin = do
+  reserved "inner"
+  reserved "join"
+  table <- tableName
+  reserved "on"
+  expr <- boolExpression
+  InnerJoin table expr <$> statement'
 
 end = do
   eof

@@ -34,11 +34,14 @@ data AggregationFunction = Min | Max | Avg | Sum | Count deriving (Show)
 data Statement = Seq [Statement]
   | Load String
   | Select Bool [Language.Column] Statement
-  | From String String Statement
+  | From TableName Statement
   | Where BoolExpr Statement
   | OrderBy [Language.Column] Statement
+  | InnerJoin TableName BoolExpr Statement
   | End
   deriving (Show)
+
+data TableName = TableName String String deriving(Show)
 
 data Column = ColumnSimple ColumnName
   | ColumnWithName ColumnName String
@@ -78,7 +81,10 @@ languageDef = emptyDef {
     "max",
     "avg",
     "med",
-    "sum"
+    "sum",
+    "inner",
+    "join",
+    "on"
   ],
   Token.reservedOpNames = [
     "+", "-", "*", "/", "=",

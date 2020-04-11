@@ -16,7 +16,7 @@ data Parser = Parser {
 }
 
 parsers = [ Parser parseCsv "csv",  Parser parseTsv "tsv", Parser parseCsv "json" ]
-nameToFile = ["assets/map_zal-skl9.csv", "assets/mp-assistants.csv", "mp-posts_full.csv", "mps-declarations_rada.csv", "plenary_register_mps-skl9.tsv" ]
+nameToFile = ["assets/map_zal-skl9.csv", "assets/mp-assistants.csv", "assets/mp-posts_full.csv", "assets/mps-declarations_rada.csv", "assets/plenary_register_mps-skl9.tsv" ]
 
 parseTsv content = map (splitOn "\t") (lines content)
 
