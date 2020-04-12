@@ -1,8 +1,8 @@
 module Main where
 
-import Console;
-import LanguageParser;
-import Interpreter;
+import Console
+import LanguageParser
+import Interpreter
 
 main :: IO ()
 main = prompt showParse

@@ -9,6 +9,7 @@ data BoolExpr = BoolConst Bool
   | Not BoolExpr
   | BoolBinary BoolBinaryOp BoolExpr BoolExpr
   | RelationBinary RelationBinaryOp ArithmeticExpr ArithmeticExpr
+  | RelationBinaryString RelationBinaryOp StringExpr StringExpr
   | RelationTernary RelationTernaryOp ArithmeticExpr ArithmeticExpr ArithmeticExpr
   deriving (Show)
 
@@ -29,7 +30,9 @@ data ArithmeticBinaryOp = Add
   | Divide
   deriving (Show)
 
-data AggregationFunction = Min | Max | Avg | Sum | Count deriving (Show)
+data StringExpr = VarString ColumnName
+  | StringConst String
+  deriving (Show)
 
 data Statement = Seq [Statement]
   | Load String
@@ -51,6 +54,8 @@ data Column = ColumnSimple ColumnName
   deriving (Show)
 
 data ColumnName = ColumnAndTable String String | JustColumn String deriving(Show)
+
+data AggregationFunction = Min | Max | Avg | Sum | Count deriving (Show)
 
 data OrderType = Ascending | Descending deriving (Show)
 
@@ -105,5 +110,11 @@ stringLiteral = Token.stringLiteral lexer
 integer = Token.integer lexer
 comma = Token.comma lexer
 dot = Token.dot lexer
+
+string = do
+  s1 <- char '\''
+  n <- identifier
+  s2 <- char '\''
+  return n
 
 name = stringLiteral <|> identifier

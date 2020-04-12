@@ -8,6 +8,7 @@ import ColumnParser
 
 arithmeticExpression = buildExpressionParser arithmeticOperators arithmeticTerm
 boolExpression = buildExpressionParser boolOperators boolTerm
+stringExpression = VarString <$> columnName <|> StringConst <$> Language.string
 
 arithmeticOperators = [
   [Prefix (reservedOp "-" >> return Neg)],
@@ -27,6 +28,7 @@ arithmeticTerm =
 boolTerm = parens boolExpression <|>
   (reserved "true" >> return (BoolConst True)) <|>
   (reserved "false" >> return (BoolConst False)) <|>
+  try relationString <|>
   relationExpr
 
 relationExpr = do
@@ -42,6 +44,11 @@ betweenExpression expr1 = do
   expr2 <- arithmeticExpression
   reserved "and"
   RelationTernary Between expr1 expr2 <$> arithmeticExpression
+
+relationString = do
+  expr <- stringExpression
+  op <- relation
+  RelationBinaryString op expr <$> stringExpression
 
 relation =
   (reservedOp "<>" >> return NotEqual) <|>
