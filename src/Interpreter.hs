@@ -22,68 +22,65 @@ loadTable (TableName table name) = do
 
 selectFromTable (x:xs) target ref = selectFromTable xs (fromTables target (colToTable x)) ref
   where
-    colToTable (ColumnSimple name) = tableFromColumn' name (toString name) ref
+    colToTable (ColumnSimple name) = tableFromColumn' name (toColumn name) ref
     colToTable (ColumnWithName name name') = tableFromColumn' name name' ref
-    colToTable (ColumnDistinct _ name) = tableFromColumn' name (toString name) ref
+    colToTable (ColumnDistinct _ name) = tableFromColumn' name (toColumn name) ref
     colToTable f@(AggregationColumn _ col _) = Agg.evaluate f (colToTable col)
 
 selectFromTable _ target _ = target
 
-convertTable tables cols = if null tables then tableFromCols cols else selectFromTable cols empty tables
+convertTable table cols = if isEmpty table then tableFromCols cols else selectFromTable cols empty table
 
 execute (Load file) = do
   table <- loadTable $ TableName file file
   return $ show table
 
 execute (Select isDistinct cols stmt) = do
-  t <- tableExpression stmt []
+  t <- tableExpression stmt empty
   let table = convertTable t cols
   return $ show $ tryDistinct isDistinct table
 
 execute End = return "No input"
 
-tableExpression (From name stmt) tables = do
+tableExpression (From name stmt) table = do
   table <- loadTable name
-  tableExpression stmt (table:tables)
+  tableExpression stmt table
 
-tableExpression (Where expr stmt) tables = do
-  let tables' = evaluateBool expr tables
-  tableExpression stmt tables'
+tableExpression (Where expr stmt) table = tableExpression stmt (evaluateBool expr table)
 
---tableExpression (OrderBy (x:xs) stmt) tables = tableExpression (OrderBy xs stmt) (order x)
---  where
---    order (ColumnOrder n Ascending) = sortOn (sort n) rows
---    order (ColumnOrder n Descending) = sortOn (Down . sort n) rows
---    sort n x = convert $ x !! columnIndex (toColumn n) t
-
-tableExpression (InnerJoin name expr stmt) tables = do
-  table <- loadTable name
-  let tables' = tables ++ [table]
-  let t = repeatTables (len tables') tables'
-  tableExpression stmt (evaluateBool expr t)
+tableExpression (OrderBy (x:xs) stmt) t@(Table name header rows) = tableExpression (OrderBy xs stmt) (Table name header (order x))
   where
-    repeatTables rep (Table n header rows:xs) = Table n header (take rep (cycle rows')) : repeatTables rep xs
-      where rows' = concatMap (replicate (count xs)) rows
-    repeatTables _ _ = []
-    count = foldr ((*) . length . rows) 1
-    len (x:xs) = length (rows x) * count xs
+    order (ColumnOrder n Ascending) = sortOn (sort n) rows
+    order (ColumnOrder n Descending) = sortOn (Down . sort n) rows
+    sort n x = convert $ x !! columnIndex (toColumn n) t
 
-tableExpression (OrderBy _ stmt) tables = tableExpression stmt tables
+tableExpression (InnerJoin name expr stmt) table = do
+  newTable <- loadTable name
+  let joinTable = removeData $ fromTables table newTable
+  let table' = combine joinTable (rows table) newTable
+  tableExpression stmt table'
+    where
+      combine t (x:xs) newTable = combine (combineWith t x (rows newTable)) xs newTable
+      combine t _ _ = t
+      combineWith t@(Table name header _) x (y:ys)
+        | BoolInterpreter.evaluate expr row = combineWith (addRecord (x ++ y) t) x ys
+        | otherwise = combineWith t x ys
+        where row = Table name header [x ++ y]
+      combineWith t _ _ = t
+
+tableExpression (OrderBy _ stmt) table = tableExpression stmt table
 
 tableExpression _ tables = return tables
 
-evaluateBool expr tables = if null tables' then map removeData tables else tables'
+evaluateBool expr (Table name header rows) = Table name header (exec rows)
   where
-    tables' = exec tables
-    exec tables
-      | hasNoData tables = []
-      | BoolInterpreter.evaluate expr row = packTables row (exec rows)
-      | otherwise = exec rows
+    exec (x:xs)
+      | BoolInterpreter.evaluate expr row = x : exec xs
+      | otherwise = exec xs
       where
-        row = row' tables
-        rows = rows' tables
+        row = Table name header [x]
+    exec _ = []
 
-hasNoData = all (\(Table n header rows) -> null rows)
 row' = map (\(Table n header rows) -> Table n header [head rows])
 rows' = map (\(Table n header rows) -> Table n header (tail rows))
 

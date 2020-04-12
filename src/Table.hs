@@ -4,12 +4,15 @@ module Table
     empty,
     fromList,
     fromTables,
-    isEmpty
+    isEmpty,
+    removeFromHeader,
+    addRecord
   ) where
 
 import Data.List;
 import Prelude hiding (Left, Right)
 import Data.Maybe
+import Data.List.Split
 
 data Table = Table {
   name :: String,
@@ -23,9 +26,10 @@ instance Show Table where
   show (Table name h table) = unlines (intersperse sep (header : rows))
     where
       t = map (map unpack) table
-      widths = map (min 60 . maximum . map length) (transpose (h:t))
+      hr = removeTableInfo h
+      widths = map (min 60 . maximum . map length) (transpose (hr:t))
       sep = intercalate "+" $ map (flip replicate '-' . (+2)) widths
-      header = mkRow Center h
+      header = mkRow Center hr
       rows = map (mkRow Left) t
       mkRow a = intercalate "|" . zipWith (mkCell a) widths
       mkCell a n xs = " " ++ pad a n ' ' xs ++ " "
@@ -42,13 +46,16 @@ pad a n x xs
     fill = replicate diff x
     diff = n - length xs
 
-fromList name list = Table name (head list) (pack (tail list))
+fromList name list = Table name (addTableInfo name (head list)) (pack (tail list))
 pack = map (map packString)
 packString s = if null s then Nothing else Just s
+addTableInfo n = map (\x -> n ++ "." ++ x)
+removeTableInfo = map removeFromHeader
+removeFromHeader h = if '.' `elem` h then splitOn "." h !! 1 else h
 
 fromTables (Table "" [] []) (Table n h rows) = Table n h rows
 fromTables (Table n h rows) (Table "" [] []) = Table n h rows
-fromTables (Table n h1 rows1) (Table _ h2 rows2) = Table n (h1 ++ h2) (merge rows1 rows2)
+fromTables (Table n1 h1 rows1) (Table n2 h2 rows2) = Table (n1 ++ ":" ++ n2) (h1 ++ h2) (merge rows1 rows2)
   where
     merge (x:xs) (y:ys) = (x ++ y) : merge xs ys
     merge _ _ = []
@@ -57,3 +64,5 @@ empty = Table "" [] []
 
 isEmpty (Table "" [] []) = True
 isEmpty _ = False
+
+addRecord row (Table name header rows) = Table name header (rows ++ [row])

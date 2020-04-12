@@ -7,10 +7,8 @@ import Data.List
 import TableFunctions
 import Table
 
-evaluate (Var var) row = readMaybe $ fromMaybe "" (variable t)
-  where
-    t = tableFromColumn' var (toColumn var) row
-    variable (Table name header rows) = head $ head rows
+evaluate (Var var) row = readMaybe $ fromMaybe "" value
+  where value = head $ columnValue var row
 evaluate (IntConst int) row = Just int
 evaluate (Neg expr) row = do
   let x = evaluate expr row

@@ -4,6 +4,7 @@ import Text.ParserCombinators.Parsec
 import Text.Parsec.Expr
 import Control.Monad
 import Language
+import TableFunctions
 
 cols = sepBy1 tableColumn comma
 tableColumn = aggregationColumn <|> column
@@ -14,7 +15,7 @@ aggregationColumn = do
   name <- (reserved "as" >> name) <|> aggregateToString function col
   return $ AggregationColumn function col name
 
-aggregateToString func (ColumnDistinct distinct name) = return $ show func ++ "(" ++ dist ++ show name ++ ")"
+aggregateToString func (ColumnDistinct distinct name) = return $ show func ++ "(" ++ dist ++ toColumn name ++ ")"
   where dist = if distinct then "distinct " else ""
 
 distinctColumn = do
