@@ -68,3 +68,10 @@ columnValue columnName table = head $ transpose $ rows table'
 
 columnMissing name = error $ "No column with name " ++ name
 multipleEntry name = error $ "Multipler entry of " ++ name ++ ". Specify column name"
+
+toIndex c@(ColumnAndTable t n) table = columnIndex (toColumn c) table
+toIndex c@(JustColumn n) (Table name header rows)
+  | null indices = columnMissing n
+  | length indices > 1 = multipleEntry n
+  | otherwise = head indices
+  where indices = findIndices ((== n) . removeFromHeader) header

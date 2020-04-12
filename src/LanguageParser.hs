@@ -23,10 +23,10 @@ statement' =
   load <|>
   select <|>
   from <|>
-  where' <|>
-  order <|>
-  end <|>
   innerJoin <|>
+  order <|>
+  where' <|>
+  end <|>
   skip
 
 load = do

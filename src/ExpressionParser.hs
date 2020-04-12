@@ -15,9 +15,9 @@ arithmeticOperators = [
   [Infix (reservedOp "+" >> return (ArithmeticBinary Add)) AssocLeft, Infix (reservedOp "-" >> return (ArithmeticBinary Subtract)) AssocLeft]]
 
 boolOperators = [
-  [Prefix (reservedOp "not" >> return Not)],
-  [Infix (reservedOp "and" >> return (BoolBinary And)) AssocLeft],
-  [Infix (reservedOp "or" >> return (BoolBinary Or)) AssocLeft]]
+  [Prefix (reserved "not" >> return Not)],
+  [Infix (reserved "and" >> return (BoolBinary And)) AssocLeft],
+  [Infix (reserved "or" >> return (BoolBinary Or)) AssocLeft]]
 
 arithmeticTerm =
   parens arithmeticExpression <|>

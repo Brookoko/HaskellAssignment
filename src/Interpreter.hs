@@ -48,12 +48,6 @@ tableExpression (From name stmt) table = do
 
 tableExpression (Where expr stmt) table = tableExpression stmt (evaluateBool expr table)
 
-tableExpression (OrderBy (x:xs) stmt) t@(Table name header rows) = tableExpression (OrderBy xs stmt) (Table name header (order x))
-  where
-    order (ColumnOrder n Ascending) = sortOn (sort n) rows
-    order (ColumnOrder n Descending) = sortOn (Down . sort n) rows
-    sort n x = convert $ x !! columnIndex (toColumn n) t
-
 tableExpression (InnerJoin name expr stmt) table = do
   newTable <- loadTable name
   let joinTable = removeData $ fromTables table newTable
@@ -67,6 +61,12 @@ tableExpression (InnerJoin name expr stmt) table = do
         | otherwise = combineWith t x ys
         where row = Table name header [x ++ y]
       combineWith t _ _ = t
+
+tableExpression (OrderBy (x:xs) stmt) t@(Table name header rows) = tableExpression (OrderBy xs stmt) (Table name header (order x))
+  where
+    order (ColumnOrder n Ascending) = sortOn (sort n) rows
+    order (ColumnOrder n Descending) = sortOn (Down . sort n) rows
+    sort n x = convert $ x !! toIndex n t
 
 tableExpression (OrderBy _ stmt) table = tableExpression stmt table
 

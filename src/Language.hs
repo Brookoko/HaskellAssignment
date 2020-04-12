@@ -88,8 +88,7 @@ languageDef = emptyDef {
   ],
   Token.reservedOpNames = [
     "+", "-", "*", "/", "=",
-    "<", "<=", ">", ">=", "<>",
-    "and", "or", "not", "between"
+    "<", "<=", ">", ">=", "<>"
   ],
   Token.caseSensitive = False
 }
