@@ -6,7 +6,8 @@ module Table
     fromTables,
     isEmpty,
     removeFromHeader,
-    addRecord
+    addRecord,
+    emptyRow
   ) where
 
 import Data.List;
@@ -66,3 +67,5 @@ isEmpty (Table "" [] []) = True
 isEmpty _ = False
 
 addRecord row (Table name header rows) = Table name header (rows ++ [row])
+
+emptyRow (Table name header rows) = map (const Nothing) (head rows)

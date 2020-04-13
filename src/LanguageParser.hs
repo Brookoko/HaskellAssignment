@@ -24,6 +24,9 @@ statement' =
   select <|>
   from <|>
   innerJoin <|>
+  fullJoin <|>
+  leftJoin <|>
+  rightJoin <|>
   order <|>
   where' <|>
   end <|>
@@ -63,11 +66,28 @@ order = do
 
 innerJoin = do
   reserved "inner"
+  joinStmt InnerJoin
+
+fullJoin = do
+  reserved "full"
+  reserved "outer"
+  joinStmt FullJoin
+
+leftJoin = do
+  reserved "left"
+  joinStmt LeftJoin
+
+rightJoin = do
+  reserved "right"
+  joinStmt RightJoin
+
+joinStmt const = do
   reserved "join"
   table <- tableName
   reserved "on"
   expr <- boolExpression
-  InnerJoin table expr <$> statement'
+  stmt <- statement'
+  const table expr <$> statement'
 
 end = do
   eof

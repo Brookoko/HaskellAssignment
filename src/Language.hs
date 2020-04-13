@@ -41,6 +41,9 @@ data Statement = Seq [Statement]
   | Where BoolExpr Statement
   | OrderBy [Language.Column] Statement
   | InnerJoin TableName BoolExpr Statement
+  | FullJoin TableName BoolExpr Statement
+  | LeftJoin TableName BoolExpr Statement
+  | RightJoin TableName BoolExpr Statement
   | End
   deriving (Show)
 
@@ -89,7 +92,11 @@ languageDef = emptyDef {
     "sum",
     "inner",
     "join",
-    "on"
+    "on",
+    "full",
+    "outer",
+    "left",
+    "right"
   ],
   Token.reservedOpNames = [
     "+", "-", "*", "/", "=",
