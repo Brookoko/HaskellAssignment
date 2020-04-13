@@ -5,9 +5,10 @@ import Text.Parsec.Expr
 import Control.Monad
 import Language
 import TableFunctions
+import ExpressionParser
 
 cols = sepBy1 tableColumn comma
-tableColumn = aggregationColumn <|> column
+tableColumn = aggregationColumn <|> caseColumn <|> column
 
 aggregationColumn = do
   function <- aggregationFunction
@@ -49,11 +50,26 @@ orderType =
   (reserved "desc" >> return Descending) <|>
   return Ascending
 
-columnName = do
-  n <- name
-  d <- hasDot
-  if d then tableAndColumn n else justColumn n
+caseColumn = do
+  reserved "case"
+  cases <- many1 caseBranch
+  def <- defaultCase
+  reserved "end"
+  n <- (reserved "as" >> name) <|> return "case"
+  return $ CaseColumn cases def n
 
-hasDot = (dot >> return True) <|> return False
-tableAndColumn table = ColumnAndTable table <$> name
-justColumn name = return $ JustColumn name
+caseBranch = do
+  reserved "when"
+  expr <- boolExpression
+  reserved "then"
+  v <- try Language.string <|> many1 digit
+  c <- char ' '
+  return $ Branch expr v
+
+defaultCase = elseCase <|> return Nothing
+
+elseCase = do
+  reserved "else"
+  v <- try Language.string <|> many1 digit
+  c <- char ' '
+  return $ Just v

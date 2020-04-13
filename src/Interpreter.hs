@@ -26,8 +26,19 @@ selectFromTable (x:xs) target ref = selectFromTable xs (fromTables target (colTo
     colToTable (ColumnWithName name name') = tableFromColumn' name name' ref
     colToTable (ColumnDistinct _ name) = tableFromColumn' name (toColumn name) ref
     colToTable f@(AggregationColumn _ col _) = Agg.evaluate f (colToTable col)
+    colToTable c@(CaseColumn cases def name) = caseToCol c ref
 
 selectFromTable _ target _ = target
+
+caseToCol (CaseColumn cases def n) (Table name header rows) = Table name [n] (mapCase rows)
+  where
+    mapCase (x:xs) = [matchCase x cases] : mapCase xs
+    mapCase _ = []
+    matchCase x (Branch expr value:ys)
+      | BoolInterpreter.evaluate expr row = Just value
+      | otherwise = matchCase x ys
+      where row = Table name header [x]
+    matchCase _ _ = def
 
 convertTable table cols = if isEmpty table then tableFromCols cols else selectFromTable cols empty table
 

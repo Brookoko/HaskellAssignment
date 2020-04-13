@@ -54,6 +54,7 @@ data Column = ColumnSimple ColumnName
   | ColumnOrder ColumnName OrderType
   | ColumnDistinct Bool ColumnName
   | AggregationColumn AggregationFunction Language.Column String
+  | CaseColumn [CaseBranch] (Maybe String) String
   deriving (Show)
 
 data ColumnName = ColumnAndTable String String | JustColumn String deriving(Show)
@@ -61,6 +62,8 @@ data ColumnName = ColumnAndTable String String | JustColumn String deriving(Show
 data AggregationFunction = Min | Max | Avg | Sum | Count deriving (Show)
 
 data OrderType = Ascending | Descending deriving (Show)
+
+data CaseBranch = Branch BoolExpr String deriving (Show)
 
 languageDef = emptyDef {
   Token.commentLine = "--",
@@ -96,7 +99,12 @@ languageDef = emptyDef {
     "full",
     "outer",
     "left",
-    "right"
+    "right",
+    "case",
+    "when",
+    "then",
+    "else",
+    "end"
   ],
   Token.reservedOpNames = [
     "+", "-", "*", "/", "=",
@@ -118,10 +126,15 @@ integer = Token.integer lexer
 comma = Token.comma lexer
 dot = Token.dot lexer
 
-string = do
-  s1 <- char '\''
-  n <- identifier
-  s2 <- char '\''
-  return n
+string = between (char '\'') (char '\'') identifier
 
 name = stringLiteral <|> identifier
+
+columnName = do
+  n <- Language.name
+  d <- hasDot
+  if d then tableAndColumn n else justColumn n
+
+hasDot = (dot >> return True) <|> return False
+tableAndColumn table = ColumnAndTable table <$> Language.name
+justColumn name = return $ JustColumn name

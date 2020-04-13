@@ -4,7 +4,6 @@ import Text.ParserCombinators.Parsec
 import Text.Parsec.Expr
 import Control.Monad
 import Language
-import ColumnParser
 
 arithmeticExpression = buildExpressionParser arithmeticOperators arithmeticTerm
 boolExpression = buildExpressionParser boolOperators boolTerm
