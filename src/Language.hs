@@ -44,6 +44,7 @@ data Statement = Seq [Statement]
   | FullJoin TableName BoolExpr Statement
   | LeftJoin TableName BoolExpr Statement
   | RightJoin TableName BoolExpr Statement
+  | Group [ColumnName] Statement
   | End
   deriving (Show)
 
@@ -104,7 +105,9 @@ languageDef = emptyDef {
     "when",
     "then",
     "else",
-    "end"
+    "end",
+    "group",
+    "having"
   ],
   Token.reservedOpNames = [
     "+", "-", "*", "/", "=",

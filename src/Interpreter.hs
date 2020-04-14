@@ -87,13 +87,20 @@ tableExpression (FullJoin name expr stmt) table = do
   let table' = rightWithout table newTable left expr
   tableExpression stmt table'
 
-tableExpression (OrderBy (x:xs) stmt) t@(Table name header rows) = tableExpression (OrderBy xs stmt) (Table name header (order x))
-  where
-    order (ColumnOrder n Ascending) = sortOn (sort n) rows
-    order (ColumnOrder n Descending) = sortOn (Down . sort n) rows
-    sort n x = convert $ x !! toIndex n t
+tableExpression (OrderBy cols stmt) t = tableExpression stmt (sortTable cols t)
 
-tableExpression (OrderBy _ stmt) table = tableExpression stmt table
+tableExpression (Group cols stmt) t@(Table name header rows) = do
+  let order = map (`ColumnOrder` Ascending) (reverse cols)
+  let table' = sortTable order t
+  let grouped = map head (groupBy (equal indices) rows)
+  tableExpression stmt (Table name header grouped)
+  where
+    indices = findIndices ((`elem` map toColumn cols) . removeFromHeader) header
+    equal :: [Int] -> [Maybe String] -> [Maybe String] -> Bool
+    equal (z:zs) x y
+      | x !! z == y !! z = equal zs x y
+      | otherwise = False
+    equal _ x y = True
 
 tableExpression _ tables = return tables
 
@@ -135,6 +142,13 @@ evaluateBool expr (Table name header rows) = Table name header (exec rows)
       where
         row = Table name header [x]
     exec _ = []
+
+sortTable (x:xs) t@(Table name header rows) = sortTable xs (Table name header (order x))
+  where
+    order (ColumnOrder n Ascending) = sortOn (sorting n) rows
+    order (ColumnOrder n Descending) = sortOn (Down . sorting n) rows
+    sorting n x = convert $ x !! toIndex n t
+sortTable _ t = t
 
 row' = map (\(Table n header rows) -> Table n header [head rows])
 rows' = map (\(Table n header rows) -> Table n header (tail rows))

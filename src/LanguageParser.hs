@@ -29,6 +29,7 @@ statement' =
   rightJoin <|>
   order <|>
   where' <|>
+  group <|>
   end <|>
   skip
 
@@ -88,6 +89,12 @@ joinStmt const = do
   expr <- boolExpression
   stmt <- statement'
   const table expr <$> statement'
+
+group = do
+  reserved "group"
+  reserved "by"
+  cols <- sepBy1 columnName comma
+  Group cols <$> statement'
 
 end = do
   eof
