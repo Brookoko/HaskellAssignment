@@ -25,13 +25,6 @@ distinctColumn = do
 
 isDistinct = (reserved "distinct" >> return True) <|> return False
 
-aggregationFunction =
-  (reserved "count" >> return Count) <|>
-  (reserved "min" >> return Min) <|>
-  (reserved "max" >> return Max) <|>
-  (reserved "avg" >> return Avg) <|>
-  (reserved "sum" >> return Sum)
-
 column = do
   col <- columnName
   colWithName col <|> simpleCol col

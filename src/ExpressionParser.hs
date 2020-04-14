@@ -7,6 +7,7 @@ import Language
 
 arithmeticExpression = buildExpressionParser arithmeticOperators arithmeticTerm
 boolExpression = buildExpressionParser boolOperators boolTerm
+boolExpressionHaving = buildExpressionParser boolOperators boolTermHaving
 stringExpression = VarString <$> columnName <|> StringConst <$> Language.string
 
 arithmeticOperators = [
@@ -24,11 +25,31 @@ arithmeticTerm =
   Var <$> columnName <|>
   IntConst <$> integer
 
-boolTerm = parens boolExpression <|>
+boolTerm = parens boolExpression <|> boolTerms
+
+boolTerms =
   (reserved "true" >> return (BoolConst True)) <|>
   (reserved "false" >> return (BoolConst False)) <|>
   try relationString <|>
-  relationExpr
+  try relationExpr
+
+boolTermHaving = parens boolExpressionHaving <|>
+  boolTerms <|>
+  aggregationExpr
+
+aggregationExpr = do
+  expr <- aggregate
+  op <- relation
+  RelationAggregation op expr <$> aggregate
+
+aggregate = aggregationFuncExpr <|> aggregationInt
+
+aggregationFuncExpr = do
+  function <- aggregationFunction
+  col <- parens columnName
+  return $ AggregationExpression function col
+
+aggregationInt = VarInt <$> integer
 
 relationExpr = do
   expr <- arithmeticExpression
@@ -56,3 +77,10 @@ relation =
   (reservedOp ">=" >> return GreaterThan) <|>
   (reservedOp "<" >> return Less) <|>
   (reservedOp "<=" >> return LessThan)
+
+aggregationFunction =
+  (reserved "count" >> return Count) <|>
+  (reserved "min" >> return Min) <|>
+  (reserved "max" >> return Max) <|>
+  (reserved "avg" >> return Avg) <|>
+  (reserved "sum" >> return Sum)

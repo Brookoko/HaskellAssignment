@@ -30,6 +30,7 @@ statement' =
   order <|>
   where' <|>
   group <|>
+  having <|>
   end <|>
   skip
 
@@ -95,6 +96,11 @@ group = do
   reserved "by"
   cols <- sepBy1 columnName comma
   Group cols <$> statement'
+
+having = do
+  reserved "having"
+  expr <- boolExpressionHaving
+  Having expr <$> statement'
 
 end = do
   eof

@@ -1,6 +1,7 @@
 module AggregationInterpreter
   (
-    evaluate
+    evaluate,
+    aggregate
   ) where
 
 import Language
@@ -11,7 +12,9 @@ import Prelude hiding (min, max, sum)
 import TableFunctions
 
 evaluate f@(AggregationColumn _ (ColumnDistinct isDistinct name) h) t@(Table n header rows) =
-  Table n [h] [[aggregate f (map head (tryDistinctRows isDistinct rows))]]
+  Table n [h] [[aggregateString f (map head (tryDistinctRows isDistinct rows))]]
+
+aggregateString f list = Just $ show $ aggregate f list
 
 aggregate (AggregationColumn Count _ _) list = Just $ show $ length list
 aggregate (AggregationColumn Min _ _) list = min list

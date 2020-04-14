@@ -11,6 +11,7 @@ data BoolExpr = BoolConst Bool
   | RelationBinary RelationBinaryOp ArithmeticExpr ArithmeticExpr
   | RelationBinaryString RelationBinaryOp StringExpr StringExpr
   | RelationTernary RelationTernaryOp ArithmeticExpr ArithmeticExpr ArithmeticExpr
+  | RelationAggregation RelationBinaryOp AggregationExpr AggregationExpr
   deriving (Show)
 
 data BoolBinaryOp = And | Or deriving (Show)
@@ -34,6 +35,10 @@ data StringExpr = VarString ColumnName
   | StringConst String
   deriving (Show)
 
+data AggregationExpr = VarInt Integer
+  | AggregationExpression AggregationFunction ColumnName
+  deriving (Show)
+
 data Statement = Seq [Statement]
   | Load String
   | Select Bool [Language.Column] Statement
@@ -45,6 +50,7 @@ data Statement = Seq [Statement]
   | LeftJoin TableName BoolExpr Statement
   | RightJoin TableName BoolExpr Statement
   | Group [ColumnName] Statement
+  | Having BoolExpr Statement
   | End
   deriving (Show)
 

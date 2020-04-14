@@ -102,6 +102,8 @@ tableExpression (Group cols stmt) t@(Table name header rows) = do
       | otherwise = False
     equal _ x y = True
 
+tableExpression (Having expr stmt) table = tableExpression stmt (evaluateBool expr table)
+
 tableExpression _ tables = return tables
 
 leftWithout table newTable target expr = combine target (rows table) newTable
