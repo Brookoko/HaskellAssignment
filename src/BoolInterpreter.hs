@@ -34,8 +34,8 @@ evaluate (RelationAggregation op expr1 expr2) row = do
   let y = evaluateAggregation expr2 row
   evaluateSafely op x y
 
-evaluateAggregation (VarInt int) row = int
-evaluateAggregation _ r = 0
+evaluateAggregation (VarInt int) row = realToFrac int
+evaluateAggregation (AggregationExpression f name) row = Agg.aggregateHaving f name row
 
 evaluateSafely Equal x y = x == y
 evaluateSafely NotEqual x y = x /= y

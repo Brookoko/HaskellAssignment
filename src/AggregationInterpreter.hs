@@ -1,7 +1,8 @@
 module AggregationInterpreter
   (
     evaluate,
-    aggregate
+    aggregate,
+    aggregateHaving
   ) where
 
 import Language
@@ -16,14 +17,13 @@ evaluate (AggregationColumn f (ColumnDistinct isDistinct name) h) t@(Table n hea
   then Table n [h] (aggregateString f isDistinct rows) groups
   else Table n [h] (aggregateMap f isDistinct i groups) groups
 
-aggregateMap :: AggregationFunction -> Bool -> Int -> [[[Maybe String]]] -> [[Maybe String]]
 aggregateMap f isDistinct i = map ((:[]) . toString . aggregate f . flatColumn isDistinct i)
 aggregateString f isDistinct rows = [[toString $ aggregate f (flatColumn isDistinct 0 rows)]]
 
 flatColumn isDistinct i rows = map (!! i) (tryDistinctRows isDistinct rows)
 toString x = Just $ show x
+aggregateHaving f col t@(Table name header rows groups) = aggregate f (flatColumn False (toIndex col t) (head groups))
 
-aggregate :: AggregationFunction -> [Maybe String] -> Double
 aggregate Count = count
 aggregate Min = min
 aggregate Max = max

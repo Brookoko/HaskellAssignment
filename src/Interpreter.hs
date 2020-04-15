@@ -106,7 +106,14 @@ tableExpression (Group cols stmt) t@(Table name header rows groups) = do
       | otherwise = False
     equal _ x y = True
 
-tableExpression (Having expr stmt) table = tableExpression stmt (evaluateBool expr table)
+tableExpression (Having expr stmt) table = tableExpression stmt (exec table)
+  where
+    exec (Table name header (x:xs) (y:ys))
+      | BoolInterpreter.evaluate expr row = addRecordAndGroup x y (exec (Table name header xs ys))
+      | otherwise = exec (Table name header xs ys)
+      where
+        row = Table name header [x] [y]
+    exec (Table name header _ _) = Table name header [] []
 
 tableExpression _ tables = return tables
 

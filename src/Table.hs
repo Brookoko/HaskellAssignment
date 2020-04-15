@@ -7,6 +7,7 @@ module Table
     isEmpty,
     removeFromHeader,
     addRecord,
+    addRecordAndGroup,
     emptyRow
   ) where
 
@@ -68,5 +69,6 @@ isEmpty (Table "" [] [] []) = True
 isEmpty _ = False
 
 addRecord row (Table name header rows groups) = Table name header (rows ++ [row]) groups
+addRecordAndGroup row group (Table name header rows groups) = Table name header (row:rows) (group:groups)
 
 emptyRow (Table name header rows _) = map (const Nothing) (head rows)
