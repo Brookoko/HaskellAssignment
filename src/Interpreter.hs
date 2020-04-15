@@ -22,6 +22,7 @@ loadTable (TableName table name) = do
 
 selectFromTable (x:xs) target ref = selectFromTable xs (fromTables target (colToTable x)) ref
   where
+    colToTable :: Column -> Table
     colToTable (ColumnSimple name) = tableFromColumn' name (toColumn name) ref
     colToTable (ColumnWithName name name') = tableFromColumn' name name' ref
     colToTable (ColumnDistinct _ name) = tableFromColumn' name (toColumn name) ref
@@ -30,14 +31,14 @@ selectFromTable (x:xs) target ref = selectFromTable xs (fromTables target (colTo
 
 selectFromTable _ target _ = target
 
-caseToCol (CaseColumn cases def n) (Table name header rows) = Table name [n] (mapCase rows)
+caseToCol (CaseColumn cases def n) (Table name header rows groups) = Table name [n] (mapCase rows) groups
   where
     mapCase (x:xs) = [matchCase x cases] : mapCase xs
     mapCase _ = []
     matchCase x (Branch expr value:ys)
       | BoolInterpreter.evaluate expr row = Just value
       | otherwise = matchCase x ys
-      where row = Table name header [x]
+      where row = Table name header [x] groups
     matchCase _ _ = def
 
 convertTable table cols = if isEmpty table then tableFromCols cols else selectFromTable cols empty table
@@ -89,11 +90,11 @@ tableExpression (FullJoin name expr stmt) table = do
 
 tableExpression (OrderBy cols stmt) t = tableExpression stmt (sortTable cols t)
 
-tableExpression (Group cols stmt) t@(Table name header rows) = do
+tableExpression (Group cols stmt) t@(Table name header rows groups) = do
   let order = map (`ColumnOrder` Ascending) (reverse cols)
   let table' = sortTable order t
   let grouped = map head (groupBy (equal indices) rows)
-  tableExpression stmt (Table name header grouped)
+  tableExpression stmt (Table name header grouped groups)
   where
     indices = findIndices ((`elem` map toColumn cols) . removeFromHeader) header
     equal :: [Int] -> [Maybe String] -> [Maybe String] -> Bool
@@ -110,53 +111,48 @@ leftWithout table newTable target expr = combine target (rows table) newTable
   where
     combine t (x:xs) newTable = combine (combineWith t x (rows newTable)) xs newTable
     combine t _ _ = t
-    combineWith t@(Table name header _) x (y:ys)
+    combineWith t@(Table name header _ _) x (y:ys)
       | BoolInterpreter.evaluate expr row = t
       | otherwise = combineWith t x ys
-      where row = Table name header [x ++ y]
+      where row = Table name header [x ++ y] (groups table)
     combineWith t x _ = addRecord (x ++ emptyRow newTable) t
 
 rightWithout table newTable target expr = combine target (rows newTable) table
   where
     combine t (x:xs) newTable = combine (combineWith t x (rows newTable)) xs newTable
     combine t _ _ = t
-    combineWith t@(Table name header _) x (y:ys)
+    combineWith t@(Table name header _ groups) x (y:ys)
       | BoolInterpreter.evaluate expr row = t
       | otherwise = combineWith t x ys
-      where row = Table name header [y ++ x]
+      where row = Table name header [y ++ x] groups
     combineWith t x _ = addRecord (emptyRow table ++ x) t
 
 inner table newTable target expr = combine target (rows table) newTable
   where
     combine t (x:xs) newTable = combine (combineWith t x (rows newTable)) xs newTable
     combine t _ _ = t
-    combineWith t@(Table name header _) x (y:ys)
+    combineWith t@(Table name header _ _) x (y:ys)
       | BoolInterpreter.evaluate expr row = combineWith (addRecord (x ++ y) t) x ys
       | otherwise = combineWith t x ys
-      where row = Table name header [x ++ y]
+      where row = Table name header [x ++ y] (groups table)
     combineWith t _ _ = t
 
-evaluateBool expr (Table name header rows) = Table name header (exec rows)
+evaluateBool expr (Table name header rows groups) = Table name header (exec rows) groups
   where
     exec (x:xs)
       | BoolInterpreter.evaluate expr row = x : exec xs
       | otherwise = exec xs
       where
-        row = Table name header [x]
+        row = Table name header [x] groups
     exec _ = []
 
-sortTable (x:xs) t@(Table name header rows) = sortTable xs (Table name header (order x))
+sortTable (x:xs) t@(Table name header rows groups) = sortTable xs (Table name header (order x) (sortGroup x))
   where
+    sortGroup (ColumnOrder n Ascending) = sortOn (sorting n . head) groups
+    sortGroup (ColumnOrder n Descending) = sortOn (Down. sorting n . head) groups
     order (ColumnOrder n Ascending) = sortOn (sorting n) rows
     order (ColumnOrder n Descending) = sortOn (Down . sorting n) rows
     sorting n x = convert $ x !! toIndex n t
 sortTable _ t = t
 
-row' = map (\(Table n header rows) -> Table n header [head rows])
-rows' = map (\(Table n header rows) -> Table n header (tail rows))
-
-packTables (Table n header row:xs) (Table _ _ rows:ys) = Table n header (row ++ rows) : packTables xs ys
-packTables xs'@(x:xs) [] = xs'
-packTables [] [] = []
-
-removeData (Table n header rows) = Table n header []
+removeData (Table n header rows groups) = Table n header [] groups

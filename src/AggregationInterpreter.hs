@@ -11,8 +11,8 @@ import Data.List hiding (sum)
 import Prelude hiding (min, max, sum)
 import TableFunctions
 
-evaluate f@(AggregationColumn _ (ColumnDistinct isDistinct name) h) t@(Table n header rows) =
-  Table n [h] [[aggregateString f (map head (tryDistinctRows isDistinct rows))]]
+evaluate f@(AggregationColumn _ (ColumnDistinct isDistinct name) h) t@(Table n header rows groups) =
+  Table n [h] [[aggregateString f (map head (tryDistinctRows isDistinct rows))]] groups
 
 aggregateString f list = Just $ show $ aggregate f list
 

@@ -20,39 +20,39 @@ getName (ColumnSimple name) = toColumn name
 
 tableFromCols cols = fromList "" (names cols : [columns cols])
 
-distinct (Table n header rows) = Table n header (distinctRows rows)
+distinct (Table n header rows groups) = Table n header (distinctRows rows) groups
 distinctRows (x:xs) = x : distinctRows (filter (/=x) xs)
 distinctRows _ = []
 
 tryDistinct isDistinct table = if isDistinct then distinct table else table
 tryDistinctRows isDistinct rows = if isDistinct then distinctRows rows else rows
 
-tableFromColumn columnName alias t@(Table n header rows)
+tableFromColumn columnName alias t@(Table n header rows groups)
   | '*' `elem` column = t
-  | hasColumn column t = Table n [alias] (map (\x -> [x !! i]) rows)
+  | hasColumn column t = Table n [alias] (map (\x -> [x !! i]) rows) groups
   | otherwise = empty
     where
       column = toColumn columnName
       i = columnIndex column t
 
-hasColumn n (Table name header rows) = n `elem` header
-columnIndex name (Table n header _) = fromMaybe (columnMissing name) (elemIndex name header)
+hasColumn n (Table name header rows _) = n `elem` header
+columnIndex name (Table n header _ _) = fromMaybe (columnMissing name) (elemIndex name header)
 
-tableFromColumn' columnName alias table@(Table name header rows) = from columnName
+tableFromColumn' columnName alias table@(Table name header rows _) = from columnName
   where
     from (ColumnAndTable t n) = tableFromColumn columnName alias (allWithInfo t table)
     from (JustColumn n)
       | n == "*" = table
       | otherwise = withName n alias table
 
-allWithInfo t (Table name header rows) =
-  Table name (fromIndices indices header) (rowsIndices indices rows)
+allWithInfo t (Table name header rows groups) =
+  Table name (fromIndices indices header) (rowsIndices indices rows) groups
   where indices = findIndices ((== t) . takeWhile (/= '.')) header
 
-withName n alias (Table name header rows)
+withName n alias (Table name header rows groups)
   | null indices = columnMissing n
   | length indices > 1 = multipleEntry n
-  | otherwise = Table name [alias] (rowsIndices indices rows)
+  | otherwise = Table name [alias] (rowsIndices indices rows) groups
   where indices = findIndices ((== n) . removeFromHeader) header
 
 rowsIndices indices = transpose . fromIndices indices . transpose
@@ -70,7 +70,7 @@ columnMissing name = error $ "No column with name " ++ name
 multipleEntry name = error $ "Multipler entry of " ++ name ++ ". Specify column name"
 
 toIndex c@(ColumnAndTable t n) table = columnIndex (toColumn c) table
-toIndex c@(JustColumn n) (Table name header rows)
+toIndex c@(JustColumn n) (Table name header rows _)
   | null indices = columnMissing n
   | length indices > 1 = multipleEntry n
   | otherwise = head indices
