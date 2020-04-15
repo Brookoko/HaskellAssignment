@@ -41,19 +41,15 @@ columnIndex name (Table n header _ _) = fromMaybe (columnMissing name) (elemInde
 tableFromColumn' columnName alias table@(Table name header rows _) = from columnName
   where
     from (ColumnAndTable t n) = tableFromColumn columnName alias (allWithInfo t table)
-    from (JustColumn n)
+    from col@(JustColumn n)
       | n == "*" = table
-      | otherwise = withName n alias table
+      | otherwise = withName col alias table
 
 allWithInfo t (Table name header rows groups) =
   Table name (fromIndices indices header) (rowsIndices indices rows) groups
   where indices = findIndices ((== t) . takeWhile (/= '.')) header
 
-withName n alias (Table name header rows groups)
-  | null indices = columnMissing n
-  | length indices > 1 = multipleEntry n
-  | otherwise = Table name [alias] (rowsIndices indices rows) groups
-  where indices = findIndices ((== n) . removeFromHeader) header
+withName col alias t@(Table name header rows groups) = Table name [alias] (rowsIndices (indices col t) rows) groups
 
 rowsIndices indices = transpose . fromIndices indices . transpose
 fromIndices indices = from 0
@@ -70,8 +66,12 @@ columnMissing name = error $ "No column with name " ++ name
 multipleEntry name = error $ "Multipler entry of " ++ name ++ ". Specify column name"
 
 toIndex c@(ColumnAndTable t n) table = columnIndex (toColumn c) table
-toIndex c@(JustColumn n) (Table name header rows _)
+toIndex c@(JustColumn n) table
+  | n == "*" = 0
+  | otherwise = head $ indices c table
+
+indices (JustColumn n) (Table name header rows _)
   | null indices = columnMissing n
   | length indices > 1 = multipleEntry n
-  | otherwise = head indices
+  | otherwise = indices
   where indices = findIndices ((== n) . removeFromHeader) header

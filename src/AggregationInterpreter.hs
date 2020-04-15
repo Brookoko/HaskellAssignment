@@ -11,21 +11,31 @@ import Data.List hiding (sum)
 import Prelude hiding (min, max, sum)
 import TableFunctions
 
-evaluate f@(AggregationColumn _ (ColumnDistinct isDistinct name) h) t@(Table n header rows groups) =
-  Table n [h] [[aggregateString f (map head (tryDistinctRows isDistinct rows))]] groups
+evaluate (AggregationColumn f (ColumnDistinct isDistinct name) h) t@(Table n header rows groups) i =
+  if null groups
+  then Table n [h] (aggregateString f isDistinct rows) groups
+  else Table n [h] (aggregateMap f isDistinct i groups) groups
 
-aggregateString f list = Just $ show $ aggregate f list
+aggregateMap :: AggregationFunction -> Bool -> Int -> [[[Maybe String]]] -> [[Maybe String]]
+aggregateMap f isDistinct i = map ((:[]) . toString . aggregate f . flatColumn isDistinct i)
+aggregateString f isDistinct rows = [[toString $ aggregate f (flatColumn isDistinct 0 rows)]]
 
-aggregate (AggregationColumn Count _ _) list = Just $ show $ length list
-aggregate (AggregationColumn Min _ _) list = min list
-aggregate (AggregationColumn Max _ _) list = max list
-aggregate (AggregationColumn Avg _ _) list = Just $ show $ average list
-aggregate (AggregationColumn Sum _ _) list = Just $ show $ sum list
+flatColumn isDistinct i rows = map (!! i) (tryDistinctRows isDistinct rows)
+toString x = Just $ show x
 
-min = minimumBy comp
-max = maximumBy comp
+aggregate :: AggregationFunction -> [Maybe String] -> Double
+aggregate Count = count
+aggregate Min = min
+aggregate Max = max
+aggregate Avg = average
+aggregate Sum = sum
+
+count = realToFrac . length
+min = strToDouble . minimumBy comp
+max = strToDouble . maximumBy comp
 comp x y = compare (convert x) (convert y)
+strToDouble = realToFrac . toInt . convert
 convertList = map convert
-sum = foldr ((+) . toInt) 0 . convertList
-average list = realToFrac(sum list) / realToFrac(length list)
+sum = realToFrac . foldr ((+) . toInt) 0 . convertList
+average list = sum list / count list
 
