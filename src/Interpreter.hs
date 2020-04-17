@@ -49,9 +49,6 @@ execute (Load file) = do
 
 execute (Select isDistinct cols stmt) = do
   t <- tableExpression stmt empty
-  let (AggregationColumn _ (ColumnDistinct _ n) _) = cols !! 1
-  print n
-  print $ toIndex n t
   let table = convertTable t cols
   return $ show $ tryDistinct isDistinct table
 
@@ -93,14 +90,14 @@ tableExpression (FullJoin name expr stmt) table = do
 
 tableExpression (OrderBy cols stmt) t = tableExpression stmt (sortTable cols t)
 
-tableExpression (Group cols stmt) t@(Table name header rows groups) = do
+tableExpression (Group cols stmt) t@(Table name header _ _) = do
   let order = map (`ColumnOrder` Ascending) (reverse cols)
+  print order
   let table' = sortTable order t
-  let grouped = groupBy (equal indices) rows
+  let grouped = groupBy (equal indices) (rows table')
   tableExpression stmt (Table name header (map head grouped) grouped)
   where
     indices = findIndices ((`elem` map toColumn cols) . removeFromHeader) header
-    equal :: [Int] -> [Maybe String] -> [Maybe String] -> Bool
     equal (z:zs) x y
       | x !! z == y !! z = equal zs x y
       | otherwise = False
