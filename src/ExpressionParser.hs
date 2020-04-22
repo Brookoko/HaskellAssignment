@@ -30,8 +30,8 @@ boolTerm = parens boolExpression <|> boolTerms
 boolTerms =
   (reserved "true" >> return (BoolConst True)) <|>
   (reserved "false" >> return (BoolConst False)) <|>
-  try relationString <|>
-  try relationExpr
+  try relationExpr <|>
+  try relationString 
 
 boolTermHaving = parens boolExpressionHaving <|>
   boolTerms <|>

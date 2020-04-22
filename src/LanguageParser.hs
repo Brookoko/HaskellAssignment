@@ -88,7 +88,6 @@ joinStmt const = do
   table <- tableName
   reserved "on"
   expr <- boolExpression
-  stmt <- statement'
   const table expr <$> statement'
 
 group = do
